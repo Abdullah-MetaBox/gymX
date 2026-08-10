@@ -1,0 +1,15 @@
+{
+  "name": "@gymx/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run:job": "tsx src/run-job.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gymx/db": "workspace:*",
+    "@gymx/jobs": "workspace:*",
+    "dotenv": "^16.4.7"
+  }
+}

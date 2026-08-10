@@ -1,0 +1,70 @@
+name: Scheduled jobs
+
+# GitHub Actions rather than Vercel Cron: the Hobby plan allows two cron jobs
+# at once-daily granularity, and the roadmap has eight jobs, one of them
+# frequent. This also keeps the schedule identical across Hobby, Pro and any
+# future host — only APP_URL changes.
+#
+# GitHub cron is UTC-only and fires on a best-effort basis (it can lag under
+# load). Nothing here should assume it ran at an exact minute; job handlers
+# derive their own period from the gym's timezone.
+
+on:
+  schedule:
+    # 22:00 UTC = 02:00 Indian/Mauritius (UTC+4, no DST). The nightly batch.
+    - cron: '0 22 * * *'
+    # Frequent batch, every 15 minutes. Empty until Phase 6's notification drain.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Job or batch to run'
+        required: true
+        default: 'nightly'
+        type: string
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide which batch this run is for
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "target=${{ inputs.target }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 22 * * *" ]; then
+            echo "target=nightly" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=frequent" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::APP_URL and CRON_SECRET repository secrets must be set"
+            exit 1
+          fi
+
+          target="${{ steps.target.outputs.target }}"
+          echo "Running batch: $target"
+
+          # -sS: quiet but still report transport errors.
+          # Response body is printed for the Actions log; the status code
+          # decides pass/fail, because the endpoint returns 500 if any job
+          # inside the batch failed.
+          status=$(curl -sS -o /tmp/response.json -w '%{http_code}' \
+            -X POST "$APP_URL/api/jobs/run?target=$target" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 300 --retry 2 --retry-delay 10 --retry-connrefused)
+
+          echo "HTTP $status"
+          cat /tmp/response.json
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Job batch '$target' failed with HTTP $status"
+            exit 1
+          fi

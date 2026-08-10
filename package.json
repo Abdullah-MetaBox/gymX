@@ -1,0 +1,45 @@
+{
+  "name": "gymx",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.30.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @gymx/admin dev",
+    "worker:run": "pnpm --filter @gymx/worker run:job",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "pnpm --filter @gymx/db generate",
+    "db:migrate": "pnpm --filter @gymx/db migrate",
+    "db:bootstrap": "pnpm --filter @gymx/db bootstrap",
+    "db:seed": "pnpm --filter @gymx/db seed",
+    "db:reset": "pnpm --filter @gymx/db reset",
+    "db:studio": "pnpm --filter @gymx/db studio"
+  },
+  "pnpm": {
+    "//": "We develop on Windows and deploy to x64 Linux (Vercel, GitHub Actions). Without this, the lockfile records only the win32 build of @node-rs/argon2's native binary, and `pnpm install --frozen-lockfile` on Vercel installs a package with no usable binding — every sign-in then fails at RUNTIME, not at build time. Kept to the two platforms actually in use; add darwin/arm64 here if someone joins on a Mac.",
+    "supportedArchitectures": {
+      "os": [
+        "win32",
+        "linux"
+      ],
+      "cpu": [
+        "x64"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.14",
+    "@types/node": "^22.10.5",
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+
+  "//": [
+    "Set the Vercel project's Root Directory to `apps/admin`. Vercel then runs",
+    "the install at the workspace root (it detects the pnpm workspace) and",
+    "builds here, which is the layout Next.js monorepo detection expects.",
+    "",
+    "Scheduled jobs are NOT Vercel Cron -- see .github/workflows/cron.yml for",
+    "why (Hobby allows two crons at daily granularity; the roadmap has eight",
+    "jobs, one of them frequent).",
+    "",
+    "REGION: pick the Vercel region that matches the Neon region. A page renders",
+    "several queries, and a function in Washington talking to a database in",
+    "Frankfurt pays a transatlantic round trip on each one. Set it in the",
+    "project's Functions settings so it is visible next to the Neon region."
+  ],
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    },
+    {
+      "//": "The job endpoint must never be cached or indexed.",
+      "source": "/api/jobs/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    }
+  ]
+}

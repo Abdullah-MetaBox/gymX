@@ -1,0 +1,45 @@
+{
+  "_comment": "Deliberately partial. French ships as one dedicated pass in Phase 10; until then untranslated keys fall back to English rather than rendering a raw key. The handful below exist so the fallback path is exercised in development instead of being discovered late.",
+  "common": {
+    "appName": "GymX",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "search": "Rechercher",
+    "loading": "Chargement…",
+    "signOut": "Se déconnecter",
+    "signIn": "Se connecter",
+    "back": "Retour",
+    "actions": "Actions",
+    "yes": "Oui",
+    "no": "Non",
+    "readOnly": "Lecture seule"
+  },
+  "auth": {
+    "signInTitle": "Connexion à GymX",
+    "signInSubtitle": "Gestion de salle de sport",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "invalidCredentials": "Cet e-mail et ce mot de passe ne correspondent à aucun compte."
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "members": "Adhérents",
+    "plans": "Formules",
+    "billing": "Facturation",
+    "checkIn": "Accès",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "team": "Équipe",
+    "gyms": "Salles",
+    "auditLog": "Journal d'audit",
+    "platform": "Plateforme"
+  },
+  "locale": {
+    "label": "Langue",
+    "en": "English",
+    "fr": "Français"
+  }
+}

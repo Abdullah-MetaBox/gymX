@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One CI run at a time. CI shares a Neon database with development, so
+# concurrent runs would migrate and seed on top of each other.
+concurrency:
+  group: ci-neon
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      # A DEDICATED NEON BRANCH, not the development one.
+      #
+      # CI migrates, seeds and writes probe rows. Pointing it at the branch you
+      # develop against means a push can rewrite your data mid-session. Create a
+      # `ci` branch in the Neon console and put its two connection strings in
+      # repository secrets.
+      #
+      # NEON_CI_DATABASE_URL      direct endpoint, owner role
+      # NEON_CI_APP_DATABASE_URL  pooled endpoint, gymx_app role
+      DATABASE_URL: ${{ secrets.NEON_CI_DATABASE_URL }}
+      APP_DATABASE_URL: ${{ secrets.NEON_CI_APP_DATABASE_URL }}
+      APP_DB_PASSWORD: ${{ secrets.NEON_CI_APP_DB_PASSWORD }}
+      AUTH_SECRET: ci-only-secret-not-used-for-anything-real
+      CRON_SECRET: ci-only-cron-secret-not-used-for-anything-real
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the database secrets are configured
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$APP_DATABASE_URL" ] || [ -z "$APP_DB_PASSWORD" ]; then
+            echo "::error::Set NEON_CI_DATABASE_URL, NEON_CI_APP_DATABASE_URL and NEON_CI_APP_DB_PASSWORD"
+            echo "::error::in repository secrets, pointing at a dedicated Neon 'ci' branch."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Write .env
+        # The db scripts and next.config read a single root .env.
+        run: |
+          {
+            echo "DATABASE_URL=$DATABASE_URL"
+            echo "APP_DATABASE_URL=$APP_DATABASE_URL"
+            echo "APP_DB_PASSWORD=$APP_DB_PASSWORD"
+            echo "AUTH_SECRET=$AUTH_SECRET"
+            echo "CRON_SECRET=$CRON_SECRET"
+            echo "NODE_ENV=$NODE_ENV"
+          } > .env
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Start from an empty schema so a migration that only works on an already
+      # migrated database cannot pass. Safe here because this is the CI branch.
+      - name: Reset the CI database
+        run: CONFIRM_RESET=yes pnpm db:reset
+
+      # Asserts gymx_app is NOBYPASSRLS, is not a superuser, inherits no
+      # superuser role, and owns no tables. Every tenancy guarantee in the suite
+      # below depends on all four.
+      - name: Bootstrap database
+        run: pnpm db:bootstrap
+
+      - name: Migrate (schema + RLS policies)
+        run: pnpm db:migrate
+
+      - name: Verify migrations are in sync with the schema
+        # A schema change without a generated migration would otherwise only
+        # surface when someone else ran db:migrate and got a different database.
+        run: |
+          pnpm db:generate
+          if [ -n "$(git status --porcelain packages/db/drizzle)" ]; then
+            echo "::error::Schema changed without a generated migration. Run: pnpm db:generate"
+            git status --porcelain packages/db/drizzle
+            exit 1
+          fi
+
+      - name: Seed
+        run: pnpm db:seed
+
+      # Includes the tenant-isolation suite, which connects as gymx_app rather
+      # than the owner -- the same tests run as the owner would pass while
+      # proving nothing, because Postgres exempts a table's owner from RLS.
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
