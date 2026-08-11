@@ -7,7 +7,7 @@ export default defineConfig({
   // Concrete files, not the barrel: drizzle-kit loads these through CJS, which
   // does not resolve the `.js` specifiers the barrel uses. Later phases add
   // their schema file here.
-  schema: ['./src/schema/platform.ts', './src/schema/members.ts', './src/schema/plans.ts', './src/schema/subscriptions.ts', './src/schema/payments.ts', './src/schema/access.ts'],
+  schema: ['./src/schema/platform.ts', './src/schema/members.ts', './src/schema/plans.ts', './src/schema/subscriptions.ts', './src/schema/payments.ts', './src/schema/access.ts', './src/schema/reconciliation.ts'],
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {

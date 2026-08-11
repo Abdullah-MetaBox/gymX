@@ -231,6 +231,9 @@ export const TENANT_TABLES = [
   // Phase 5
   'access_events',
   'visits',
+  // Phase 6
+  'bank_imports',
+  'bank_transactions',
 ] as const;
 
 /** Tables whose rows are immutable once written. UPDATE/DELETE revoked from gymx_app. */

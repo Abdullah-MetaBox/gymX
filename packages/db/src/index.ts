@@ -68,4 +68,10 @@ export {
   accessResultEnum,
   visits,
 } from './schema/access';
+export {
+  bankImports,
+  bankImportStatusEnum,
+  bankTransactions,
+  transactionMatchStatusEnum,
+} from './schema/reconciliation';
 export * from './tenant';

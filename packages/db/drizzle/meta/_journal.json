@@ -43,6 +43,13 @@
       "when": 1786347355688,
       "tag": "0005_glorious_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786441431950,
+      "tag": "0006_brief_inertia",
+      "breakpoints": true
     }
   ]
 }

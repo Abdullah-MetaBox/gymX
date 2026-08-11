@@ -499,6 +499,34 @@ REVOKE UPDATE, DELETE ON TABLE access_events FROM gymx_app;
 
 
 -- ---------------------------------------------------------------------------
+-- Phase 6 — Payment reconciliation: bank imports, transaction matching
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE bank_imports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bank_imports FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS bank_imports_all ON bank_imports;
+CREATE POLICY bank_imports_all ON bank_imports FOR ALL
+  USING (gym_id = app_current_gym_id() OR app_is_platform())
+  WITH CHECK (gym_id = app_current_gym_id());
+
+
+ALTER TABLE bank_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bank_transactions FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS bank_transactions_all ON bank_transactions;
+CREATE POLICY bank_transactions_all ON bank_transactions FOR ALL
+  USING (gym_id = app_current_gym_id() OR app_is_platform())
+  WITH CHECK (gym_id = app_current_gym_id());
+
+
+-- Append-only enforcement: bank_transactions cannot be updated or deleted.
+-- (Historical accuracy: once imported, a transaction is immutable; updates go
+-- through the match_status and matched_by fields, but the row itself never changes.)
+REVOKE UPDATE, DELETE ON TABLE bank_transactions FROM gymx_app;
+
+
+-- ---------------------------------------------------------------------------
 -- Default privileges, so tables created by later phases' migrations are
 -- reachable by the app without editing this file for the grant (the RLS
 -- policies for them still have to be written here, deliberately).

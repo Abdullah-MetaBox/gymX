@@ -4,3 +4,4 @@ export * from './plans';
 export * from './subscriptions';
 export * from './payments';
 export * from './access';
+export * from './reconciliation';
