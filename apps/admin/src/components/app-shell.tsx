@@ -3,6 +3,7 @@ import { LOCALE_LABELS, LOCALES } from '@gymx/i18n';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { leaveGymAction, signOutAction, switchGymAction, switchLocaleAction } from '../app/actions';
+import { env } from '../lib/env';
 import { navFor } from '../lib/nav';
 import type { ActiveContext } from '../lib/session';
 import { NavLinks } from './nav-links';
@@ -77,7 +78,7 @@ export async function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between gap-3 border-[var(--color-border)] border-b surface px-4">
           <div className="flex min-w-0 items-center gap-3">
-            {principal.memberships.length > 1 ? (
+            {!env.GYMABC_MODE && principal.memberships.length > 1 ? (
               <form action={switchGymAction}>
                 <GymSelect
                   gyms={principal.memberships.map((m) => ({ id: m.gymId, name: m.gymName }))}

@@ -15,6 +15,8 @@ const schema = z.object({
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
   /** Shared secret for the scheduled-jobs endpoint. */
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 characters').optional(),
+  /** When set, hide gym switcher and only show GymABC (for client-facing deployment). */
+  GYMABC_MODE: z.enum(['true', 'false']).default('false').transform(v => v === 'true').optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
