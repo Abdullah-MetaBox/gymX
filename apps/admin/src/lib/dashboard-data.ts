@@ -29,6 +29,10 @@ export async function getGymStats(
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  // Convert to ISO date strings for Drizzle comparisons
+  const nowStr = now.toISOString().split('T')[0];
+  const monthStartStr = monthStart.toISOString().split('T')[0];
+
   // Active members count
   const activeMemberResult = await db
     .select({ value: count(members.id) })
@@ -43,8 +47,8 @@ export async function getGymStats(
     .where(
       and(
         eq(invoices.gymId, gymId),
-        gte(invoices.issuedOn, monthStart),
-        lt(invoices.issuedOn, now),
+        gte(invoices.issuedOn, monthStartStr),
+        lt(invoices.issuedOn, nowStr),
       ),
     );
   const monthlyRev = monthlyRevResult[0]?.value ?? 0;
@@ -56,7 +60,7 @@ export async function getGymStats(
     .where(
       and(
         eq(invoices.gymId, gymId),
-        lt(invoices.dueOn, now),
+        lt(invoices.dueOn, nowStr),
         // In future: check if unpaid
       ),
     );
