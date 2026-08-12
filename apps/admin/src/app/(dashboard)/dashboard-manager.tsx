@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { KPICard } from '../../components/kpi-card';
 import { ActivityItem } from '../../components/activity-item';
-import { Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
+import { Button, Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
 import { getGymStats, getRecentActivities } from '../../lib/dashboard-data';
 import { withTenant } from '@gymx/db';
 import Link from 'next/link';
