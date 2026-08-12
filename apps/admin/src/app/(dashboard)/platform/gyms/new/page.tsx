@@ -38,6 +38,8 @@ export default async function NewGymPage() {
           overdueGraceDays: 1,
           atRiskDays: 21,
           primaryColor: '',
+          accentColor: '',
+          logoUrl: '',
           enabledModules: [],
         }}
       />
