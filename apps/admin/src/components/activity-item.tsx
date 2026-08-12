@@ -40,7 +40,8 @@ interface ActivityItemProps {
 export function ActivityItem({ activity }: ActivityItemProps) {
   const timeStr = Time.formatInstant(activity.timestamp, {
     timeZone: activity.timeZone,
-    format: 'compact',
+    dateStyle: 'short',
+    timeStyle: 'short',
   });
 
   const iconClass = ACTIVITY_COLORS[activity.type];
