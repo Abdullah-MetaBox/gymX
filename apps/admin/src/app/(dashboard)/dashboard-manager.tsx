@@ -3,7 +3,7 @@ import { KPICard } from '../../components/kpi-card';
 import { ActivityItem } from '../../components/activity-item';
 import { Button, Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
 import { getGymStats, getRecentActivities } from '../../lib/dashboard-data';
-import { queryInGym } from '../../lib/action';
+import { withTenant } from '@gymx/db';
 import Link from 'next/link';
 
 interface ManagerDashboardProps {
@@ -14,10 +14,13 @@ interface ManagerDashboardProps {
 export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProps) {
   const t = await getTranslations();
 
-  const [stats, activities] = await queryInGym({ action: 'read', subject: 'gym' }, async (db) => [
-    await getGymStats(db, gymId, timeZone),
-    await getRecentActivities(db, gymId, timeZone, 8),
-  ]);
+  let stats = { activeMembers: 0, monthlyRevenue: 0, overdueInvoices: 0, occupancyNow: { current: 0, capacity: 50, percent: 0 } };
+  let activities: any[] = [];
+
+  await withTenant(gymId, 'gym_manager', async (db) => {
+    stats = await getGymStats(db, gymId, timeZone);
+    activities = await getRecentActivities(db, gymId, timeZone, 8);
+  });
 
   return (
     <div className="space-y-6">
