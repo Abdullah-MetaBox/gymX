@@ -36,7 +36,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "members": "Members",
-    "households": "Households",
+    "households": "Family Memberships",
     "guestPasses": "Guest passes",
     "plans": "Plans",
     "billing": "Billing",
@@ -128,8 +128,8 @@
     "created": "Member added",
     "updated": "Member updated",
     "searchPlaceholder": "Name, email or member code…",
-    "household": "Household",
-    "noHousehold": "No household",
+    "household": "Family Membership",
+    "noHousehold": "No family membership",
     "documents": "Documents",
     "consents": "Consents",
     "overview": "Overview",
@@ -138,16 +138,16 @@
     "importLink": "Import from CSV"
   },
   "households": {
-    "title": "Households",
+    "title": "Family Memberships",
     "subtitle": "Groups of members who share a membership.",
-    "create": "New household",
-    "createTitle": "Create a household",
-    "name": "Household name",
+    "create": "New family membership",
+    "createTitle": "Create a family membership",
+    "name": "Family name",
     "nameHelp": "Usually the family surname, e.g. 'The Ramdhani family'.",
     "payer": "Payer",
-    "payerHelp": "The member invoiced for the household's subscription.",
+    "payerHelp": "The member invoiced for the family membership's subscription.",
     "members": "Members",
-    "addMember": "Add member to household",
+    "addMember": "Add member to family membership",
     "relationship": "Relationship",
     "relationships": {
       "primary": "Primary",
@@ -155,9 +155,9 @@
       "child": "Child",
       "other": "Other"
     },
-    "empty": "No members in this household yet.",
-    "created": "Household created",
-    "updated": "Household updated",
+    "empty": "No members in this family membership yet.",
+    "created": "Family membership created",
+    "updated": "Family membership updated",
     "memberCount": "{count, plural, one {# member} other {# members}}"
   },
   "guestPasses": {
@@ -230,8 +230,8 @@
     "active": "Active",
     "sortOrder": "Sort order",
     "accessRules": "Access rules",
-    "tiersFlat": "Household size tiers (flat price per household)",
-    "tiersPerHead": "Household size tiers (price per person)",
+    "tiersFlat": "Family size tiers (flat price per family)",
+    "tiersPerHead": "Family size tiers (price per person)",
     "noRules": "No access rules. Members can access nothing.",
     "types": {
       "contract": "Contract",
@@ -253,8 +253,8 @@
     },
     "models": {
       "flat": "Flat (one price)",
-      "flat_by_size": "Flat by household size",
-      "per_head_by_size": "Per person by household size"
+      "flat_by_size": "Flat by family size",
+      "per_head_by_size": "Per person by family size"
     },
     "areas": {
       "gym": "Gym floor",

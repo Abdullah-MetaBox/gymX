@@ -62,12 +62,12 @@ async function main() {
         minContractMonths: 12,
         overdueGraceDays: 1,
         atRiskDays: 21,
-        branding: { primaryColor: '#f0483e', accentColor: '#0f766e' },
+        branding: { primaryColor: '#d946ef', accentColor: '#0f766e' },
         enabledModules: ['gym-abc'],
       })
       .onConflictDoUpdate({
         target: schema.gyms.slug,
-        set: { name: 'Gym ABC', updatedAt: new Date() },
+        set: { name: 'Gym ABC', branding: { primaryColor: '#d946ef', accentColor: '#0f766e' }, updatedAt: new Date() },
       })
       .returning();
 

@@ -9,7 +9,8 @@ type StatusType =
   | 'granted'
   | 'denied'
   | 'paid'
-  | 'unpaid';
+  | 'unpaid'
+  | 'frozen';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -17,49 +18,37 @@ interface StatusBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const STATUS_ICONS: Record<StatusType, string> = {
-  active: '●',
-  inactive: '○',
-  'on-hold': '⏸',
-  overdue: '⚠',
-  suspended: '🚫',
-  granted: '✓',
-  denied: '✗',
-  paid: '✓',
-  unpaid: '○',
-};
-
-const STATUS_COLORS: Record<
+const STATUS_CONFIG: Record<
   StatusType,
-  { bg: string; text: string }
+  { icon: string; bg: string; text: string }
 > = {
-  active: { bg: 'bg-success/10', text: 'text-success' },
-  inactive: { bg: 'bg-gray-100', text: 'text-gray-600' },
-  'on-hold': { bg: 'bg-warning/10', text: 'text-warning' },
-  overdue: { bg: 'bg-danger/10', text: 'text-danger' },
-  suspended: { bg: 'bg-danger/20', text: 'text-danger' },
-  granted: { bg: 'bg-success/10', text: 'text-success' },
-  denied: { bg: 'bg-danger/10', text: 'text-danger' },
-  paid: { bg: 'bg-success/10', text: 'text-success' },
-  unpaid: { bg: 'bg-gray-100', text: 'text-gray-600' },
+  active: { icon: '●', bg: 'bg-[#10B981]/15', text: 'text-[#10B981]' },
+  inactive: { icon: '○', bg: 'bg-[#4B5563]/20', text: 'text-[#B5BAC1]' },
+  'on-hold': { icon: '⏸', bg: 'bg-[#D946EF]/15', text: 'text-[#D946EF]' },
+  overdue: { icon: '⚠', bg: 'bg-[#EF4444]/15', text: 'text-[#EF4444]' },
+  suspended: { icon: '🚫', bg: 'bg-[#EF4444]/20', text: 'text-[#EF4444]' },
+  granted: { icon: '✓', bg: 'bg-[#10B981]/15', text: 'text-[#10B981]' },
+  denied: { icon: '✗', bg: 'bg-[#EF4444]/15', text: 'text-[#EF4444]' },
+  paid: { icon: '✓', bg: 'bg-[#10B981]/15', text: 'text-[#10B981]' },
+  unpaid: { icon: '○', bg: 'bg-[#4B5563]/20', text: 'text-[#B5BAC1]' },
+  frozen: { icon: '❄', bg: 'bg-[#D946EF]/15', text: 'text-[#D946EF]' },
 };
 
 export function StatusBadge({ status, label, size = 'md' }: StatusBadgeProps) {
-  const colors = STATUS_COLORS[status];
-  const icon = STATUS_ICONS[status];
+  const config = STATUS_CONFIG[status];
 
   const sizeClass =
     size === 'sm'
       ? 'text-xs px-2 py-1'
       : size === 'lg'
         ? 'text-sm px-3 py-1.5'
-        : 'text-xs px-2 py-1';
+        : 'text-xs px-2.5 py-1.5';
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-medium whitespace-nowrap ${sizeClass} ${colors.bg} ${colors.text}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-medium whitespace-nowrap ${sizeClass} ${config.bg} ${config.text}`}
     >
-      <span>{icon}</span>
+      <span className="text-sm">{config.icon}</span>
       <span>{label}</span>
     </span>
   );

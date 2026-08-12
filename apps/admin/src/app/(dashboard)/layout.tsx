@@ -32,7 +32,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div style={style}>
-      <AppShell context={context}>{children}</AppShell>
+      <AppShell context={context} branding={branding}>{children}</AppShell>
     </div>
   );
 }

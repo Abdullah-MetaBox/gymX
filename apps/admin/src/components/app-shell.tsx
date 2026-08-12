@@ -1,4 +1,5 @@
 import { ROLE_LABELS } from '@gymx/core/auth';
+import type { GymBranding } from '@gymx/db';
 import { LOCALE_LABELS, LOCALES } from '@gymx/i18n';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -21,9 +22,11 @@ import { Alert, Badge } from './ui/index';
 export async function AppShell({
   context,
   children,
+  branding,
 }: {
   context: ActiveContext;
   children: ReactNode;
+  branding?: GymBranding;
 }) {
   const t = await getTranslations();
   const { principal, membership, actor, assumed } = context;
@@ -47,7 +50,7 @@ export async function AppShell({
         <div className="flex h-14 items-center gap-2 border-[var(--color-border)] border-b px-5">
           <span
             className="inline-block h-6 w-1.5 rounded-full"
-            style={{ backgroundColor: 'var(--color-primary)' }}
+            style={{ backgroundColor: branding?.primaryColor || 'var(--color-primary)' }}
             aria-hidden
           />
           <span className="font-semibold tracking-tight">{t('common.appName')}</span>

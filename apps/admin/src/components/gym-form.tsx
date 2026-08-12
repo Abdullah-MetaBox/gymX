@@ -82,6 +82,9 @@ export function GymForm({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
+    const logoFile = form.get('logo') as File | null;
+    let logoUrl = values.logoUrl;
+
     const input: Record<string, unknown> = {
       name: form.get('name'),
       brn: form.get('brn') ?? '',
@@ -96,13 +99,45 @@ export function GymForm({
       atRiskDays: form.get('atRiskDays'),
       primaryColor: form.get('primaryColor') ?? '',
       accentColor: form.get('accentColor') ?? '',
-      logoUrl: form.get('logoUrl') ?? '',
+      logoUrl,
       enabledModules: form.getAll('enabledModules'),
     };
     if (mode === 'create') input.slug = form.get('slug');
     if (values.gymId) input.gymId = values.gymId;
 
     startTransition(async () => {
+      // If a logo file was selected, upload it first
+      if (logoFile && logoFile.size > 0) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', logoFile);
+
+        try {
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: uploadFormData,
+          });
+
+          if (!uploadResponse.ok) {
+            setResult({
+              ok: false,
+              error: 'Failed to upload logo',
+              fieldErrors: { logoUrl: ['Upload failed'] },
+            });
+            return;
+          }
+
+          const uploadedData = await uploadResponse.json();
+          input.logoUrl = uploadedData.url;
+        } catch {
+          setResult({
+            ok: false,
+            error: 'Failed to upload logo',
+            fieldErrors: { logoUrl: ['Upload failed'] },
+          });
+          return;
+        }
+      }
+
       const outcome = await onSubmit(input);
       setResult(outcome);
       if (outcome.ok) {
@@ -190,7 +225,7 @@ export function GymForm({
               id="primaryColor"
               name="primaryColor"
               type="text"
-              placeholder="#e8412f"
+              placeholder="#d946ef"
               defaultValue={values.primaryColor}
             />
           </Field>
@@ -211,16 +246,24 @@ export function GymForm({
 
           <Field
             label={labels.logoUrl}
-            htmlFor="logoUrl"
+            htmlFor="logo"
             errors={fieldErrors.logoUrl}
           >
-            <Input
-              id="logoUrl"
-              name="logoUrl"
-              type="url"
-              placeholder="https://example.com/logo.png"
-              defaultValue={values.logoUrl}
-            />
+            <div className="space-y-2">
+              <input
+                id="logo"
+                name="logo"
+                type="file"
+                accept="image/*"
+                className="block w-full text-sm border border-[var(--color-border)] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+              {values.logoUrl && (
+                <div className="flex items-center gap-2">
+                  <img src={values.logoUrl} alt="Current logo" className="h-10 w-auto" />
+                  <span className="text-xs text-[var(--color-fg-muted)]">Current logo</span>
+                </div>
+              )}
+            </div>
           </Field>
 
           <Field

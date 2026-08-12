@@ -17,15 +17,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #e8412f;
-  --color-primary-hover: #cf3526;
+  --color-primary: #d946ef;
+  --color-primary-hover: #c026d3;
   --color-primary-fg: #ffffff;
   --color-accent: #0d9488;
   --color-accent-fg: #ffffff;
 
   --color-granted: #16a34a;
   --color-denied: #dc2626;
-  --color-warning: #d97706;
+  --color-warning: #d946ef;
 
   --color-bg: #fafaf9;
   --color-surface: #ffffff;
@@ -45,8 +45,8 @@
   --color-border: #3f3c39;
   --color-fg: #fafaf9;
   --color-fg-muted: #a8a29e;
-  --color-primary: #f4634f;
-  --color-primary-hover: #e8412f;
+  --color-primary: #ec4aea;
+  --color-primary-hover: #d946ef;
 }
 
 @layer base {

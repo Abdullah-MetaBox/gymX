@@ -33,10 +33,10 @@ export function NavLinks({ entries }: { entries: NavLinkEntry[] }) {
             href={entry.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex items-center gap-2.5 rounded-lg px-3 py-2 font-medium text-sm transition-colors',
+              'flex items-center gap-2.5 rounded-lg px-3 py-2 font-medium text-sm transition-colors cursor-pointer',
               active
                 ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                : 'text-[var(--color-fg)] hover:surface-2',
+                : 'text-[var(--color-fg)] hover:bg-[#F3F4F6] dark:hover:bg-[#2D2D35] hover:rounded-lg',
             )}
           >
             <Icon name={entry.icon} />

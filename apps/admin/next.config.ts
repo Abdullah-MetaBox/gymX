@@ -21,6 +21,16 @@ const config: NextConfig = {
     '@gymx/storage',
   ],
   serverExternalPackages: ['@node-rs/argon2', 'postgres'],
+  // Performance optimizations
+  swcMinify: true,
+  compress: true,
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+  // Cache strategy for Vercel
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
+  },
 };
 
 export default withNextIntl(config);

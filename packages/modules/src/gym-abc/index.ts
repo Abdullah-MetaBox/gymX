@@ -35,7 +35,7 @@ export const gymAbcModule: GymModule = {
   description: 'Tenant-specific behaviour for Gym ABC (Island Breeze).',
 
   branding() {
-    return { primaryColor: '#f0483e', accentColor: '#0f766e' };
+    return { primaryColor: '#d946ef', accentColor: '#0f766e' };
   },
 
   async seed() {
