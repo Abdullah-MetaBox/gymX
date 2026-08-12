@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { KPICard } from '../../components/kpi-card';
 import { ActivityItem } from '../../components/activity-item';
-import { Button, Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
+import { Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
 import { getGymStats, getRecentActivities } from '../../lib/dashboard-data';
 import { withTenant } from '@gymx/db';
 import Link from 'next/link';
@@ -14,12 +14,10 @@ interface ManagerDashboardProps {
 export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProps) {
   const t = await getTranslations();
 
-  let stats = { activeMembers: 0, monthlyRevenue: 0, overdueInvoices: 0, occupancyNow: { current: 0, capacity: 50, percent: 0 } };
-  let activities: any[] = [];
-
-  await withTenant({ gymId }, async (db) => {
-    stats = await getGymStats(db, gymId, timeZone);
-    activities = await getRecentActivities(db, gymId, timeZone, 8);
+  const { stats, activities } = await withTenant({ gymId }, async (db) => {
+    const s = await getGymStats(db, gymId, timeZone);
+    const a = await getRecentActivities(db, gymId, timeZone, 8);
+    return { stats: s, activities: a };
   });
 
   return (
