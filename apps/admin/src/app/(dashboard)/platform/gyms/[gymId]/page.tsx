@@ -46,6 +46,8 @@ export default async function EditGymPage({ params }: { params: Promise<{ gymId:
           overdueGraceDays: gym.overdueGraceDays,
           atRiskDays: gym.atRiskDays,
           primaryColor: gym.branding.primaryColor ?? '',
+          accentColor: gym.branding.accentColor ?? '',
+          logoUrl: gym.branding.logoUrl ?? '',
           enabledModules: gym.enabledModules,
         }}
       />
