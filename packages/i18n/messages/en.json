@@ -56,7 +56,9 @@
     "welcome": "Welcome back, {name}",
     "emptyTitle": "Nothing to show yet",
     "emptyBody": "Members, plans and billing arrive in the next phases. The foundations are in place: tenancy, roles, audit trail and scheduled jobs.",
-    "phaseLabel": "Phase 0 — Foundations"
+    "phaseLabel": "Phase 0 — Foundations",
+    "activityTitle": "Recent Activity",
+    "noActivity": "No activity yet"
   },
   "gyms": {
     "title": "Gyms",
