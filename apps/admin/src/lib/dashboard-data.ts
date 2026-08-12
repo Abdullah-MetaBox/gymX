@@ -30,8 +30,8 @@ export async function getGymStats(
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   // Convert to ISO date strings for Drizzle comparisons
-  const nowStr = now.toISOString().split('T')[0];
-  const monthStartStr = monthStart.toISOString().split('T')[0];
+  const nowStr = now.toISOString().split('T')[0] || '';
+  const monthStartStr = monthStart.toISOString().split('T')[0] || '';
 
   // Active members count
   const activeMemberResult = await db
