@@ -30,13 +30,14 @@ export async function getGymStats(
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   // Active members count
-  const [{ value: activeMemberCount }] = await db
+  const activeMemberResult = await db
     .select({ value: count(members.id) })
     .from(members)
     .where(and(eq(members.gymId, gymId), eq(members.status, 'active')));
+  const activeMemberCount = activeMemberResult[0]?.value ?? 0;
 
   // Monthly revenue (sum of paid invoices this month)
-  const [{ value: monthlyRev }] = await db
+  const monthlyRevResult = await db
     .select({ value: count(invoices.id) }) // Placeholder, should sum totals
     .from(invoices)
     .where(
@@ -46,9 +47,10 @@ export async function getGymStats(
         lt(invoices.issuedOn, now),
       ),
     );
+  const monthlyRev = monthlyRevResult[0]?.value ?? 0;
 
   // Overdue invoices (due date passed, not paid)
-  const [{ value: overdueCount }] = await db
+  const overdueResult = await db
     .select({ value: count(invoices.id) })
     .from(invoices)
     .where(
@@ -58,13 +60,14 @@ export async function getGymStats(
         // In future: check if unpaid
       ),
     );
+  const overdueCount = overdueResult[0]?.value ?? 0;
 
   // Occupancy (from access events today)
   // Simplified: count IN and OUT events, subtract for current occupancy
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
 
-  const [{ value: todayEntries }] = await db
+  const entriesResult = await db
     .select({ value: count(accessEvents.id) })
     .from(accessEvents)
     .where(
@@ -74,8 +77,9 @@ export async function getGymStats(
         gte(accessEvents.at, todayStart),
       ),
     );
+  const todayEntries = entriesResult[0]?.value ?? 0;
 
-  const [{ value: todayExits }] = await db
+  const exitsResult = await db
     .select({ value: count(accessEvents.id) })
     .from(accessEvents)
     .where(
@@ -85,17 +89,18 @@ export async function getGymStats(
         gte(accessEvents.at, todayStart),
       ),
     );
+  const todayExits = exitsResult[0]?.value ?? 0;
 
   const occupancyNow = {
-    current: (todayEntries ?? 0) - (todayExits ?? 0),
+    current: todayEntries - todayExits,
     capacity: 50, // TODO: Get from gym settings
-    percent: Math.round(((todayEntries ?? 0 - (todayExits ?? 0)) / 50) * 100),
+    percent: Math.round(((todayEntries - todayExits) / 50) * 100),
   };
 
   return {
-    activeMembers: activeMemberCount ?? 0,
-    monthlyRevenue: monthlyRev ?? 0,
-    overdueInvoices: overdueCount ?? 0,
+    activeMembers: activeMemberCount,
+    monthlyRevenue: monthlyRev,
+    overdueInvoices: overdueCount,
     occupancyNow,
   };
 }
