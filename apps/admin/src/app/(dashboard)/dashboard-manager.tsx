@@ -17,7 +17,7 @@ export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProp
   let stats = { activeMembers: 0, monthlyRevenue: 0, overdueInvoices: 0, occupancyNow: { current: 0, capacity: 50, percent: 0 } };
   let activities: any[] = [];
 
-  await withTenant(gymId, 'gym_manager', async (db) => {
+  await withTenant({ gymId }, async (db) => {
     stats = await getGymStats(db, gymId, timeZone);
     activities = await getRecentActivities(db, gymId, timeZone, 8);
   });
