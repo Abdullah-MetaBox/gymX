@@ -79,6 +79,8 @@
     "enabledModules": "Enabled modules",
     "status": "Status",
     "primaryColor": "Primary colour",
+    "accentColor": "Accent colour",
+    "logoUrl": "Logo URL",
     "created": "Gym created",
     "updated": "Gym updated",
     "empty": "No gyms yet.",

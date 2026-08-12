@@ -21,6 +21,8 @@ export interface GymFormValues {
   overdueGraceDays: number;
   atRiskDays: number;
   primaryColor: string;
+  accentColor: string;
+  logoUrl: string;
   enabledModules: string[];
 }
 
@@ -41,6 +43,8 @@ export interface GymFormLabels {
   graceHelp: string;
   atRiskDays: string;
   primaryColor: string;
+  accentColor: string;
+  logoUrl: string;
   enabledModules: string;
   submit: string;
   saved: string;
@@ -91,6 +95,8 @@ export function GymForm({
       overdueGraceDays: form.get('overdueGraceDays'),
       atRiskDays: form.get('atRiskDays'),
       primaryColor: form.get('primaryColor') ?? '',
+      accentColor: form.get('accentColor') ?? '',
+      logoUrl: form.get('logoUrl') ?? '',
       enabledModules: form.getAll('enabledModules'),
     };
     if (mode === 'create') input.slug = form.get('slug');
@@ -186,6 +192,34 @@ export function GymForm({
               type="text"
               placeholder="#e8412f"
               defaultValue={values.primaryColor}
+            />
+          </Field>
+
+          <Field
+            label={labels.accentColor}
+            htmlFor="accentColor"
+            errors={fieldErrors.accentColor}
+          >
+            <Input
+              id="accentColor"
+              name="accentColor"
+              type="text"
+              placeholder="#004E89"
+              defaultValue={values.accentColor}
+            />
+          </Field>
+
+          <Field
+            label={labels.logoUrl}
+            htmlFor="logoUrl"
+            errors={fieldErrors.logoUrl}
+          >
+            <Input
+              id="logoUrl"
+              name="logoUrl"
+              type="url"
+              placeholder="https://example.com/logo.png"
+              defaultValue={values.logoUrl}
             />
           </Field>
 

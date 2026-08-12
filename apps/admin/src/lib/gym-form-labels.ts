@@ -21,6 +21,8 @@ export async function gymFormLabels(submitKey: string): Promise<GymFormLabels> {
     graceHelp: t('gyms.graceHelp'),
     atRiskDays: t('gyms.atRiskDays'),
     primaryColor: t('gyms.primaryColor'),
+    accentColor: t('gyms.accentColor'),
+    logoUrl: t('gyms.logoUrl'),
     enabledModules: t('gyms.enabledModules'),
     submit: t(submitKey as never),
     saved: t('common.saved'),

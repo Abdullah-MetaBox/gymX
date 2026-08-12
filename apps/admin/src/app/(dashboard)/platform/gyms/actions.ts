@@ -42,12 +42,27 @@ const settingsSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, 'Use a 6-digit hex colour')
     .optional()
     .or(z.literal('')),
+  accentColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Use a 6-digit hex colour')
+    .optional()
+    .or(z.literal('')),
+  logoUrl: z
+    .string()
+    .url('Enter a valid URL')
+    .optional()
+    .or(z.literal('')),
   enabledModules: z.array(z.string()).default([]),
 });
 
 const createSchema = settingsSchema.extend({ slug: slugSchema });
 
 function toRow(input: z.infer<typeof settingsSchema>) {
+  const branding: Record<string, string> = {};
+  if (input.primaryColor) branding.primaryColor = input.primaryColor;
+  if (input.accentColor) branding.accentColor = input.accentColor;
+  if (input.logoUrl) branding.logoUrl = input.logoUrl;
+
   return {
     name: input.name,
     brn: input.brn || null,
@@ -60,7 +75,7 @@ function toRow(input: z.infer<typeof settingsSchema>) {
     minContractMonths: input.minContractMonths,
     overdueGraceDays: input.overdueGraceDays,
     atRiskDays: input.atRiskDays,
-    branding: input.primaryColor ? { primaryColor: input.primaryColor } : {},
+    branding,
     enabledModules: input.enabledModules.filter((id) =>
       allModules().some((module) => module.id === id),
     ),
