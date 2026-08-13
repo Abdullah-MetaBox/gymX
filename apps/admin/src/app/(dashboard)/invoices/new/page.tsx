@@ -9,26 +9,42 @@ import { CreateInvoiceForm } from './create-invoice-form';
 
 export default async function CreateInvoicePage() {
   const t = await getTranslations();
-  await requirePageAccess('create', 'invoice');
+  const context = await requirePageAccess('create', 'invoice');
 
-  const activeSubscriptions = await queryInGym(
-    { action: 'read', subject: 'subscription' },
-    (db) =>
-      db
-        .select({
-          id: subscriptions.id,
-          payerMemberId: subscriptions.payerMemberId,
-          payerName: members.firstName,
-          payerLastName: members.lastName,
-          planId: subscriptions.planId,
-          startsOn: subscriptions.startsOn,
-          nextInvoiceOn: subscriptions.nextInvoiceOn,
-          priceCentsSnapshot: subscriptions.priceCentsSnapshot,
-        })
-        .from(subscriptions)
-        .leftJoin(members, eq(members.id, subscriptions.payerMemberId))
-        .where(eq(subscriptions.status, 'active')),
-  );
+  if (!context.actor.gymId) {
+    return (
+      <>
+        <PageHeader title={t('invoices.createTitle')} />
+        <div className="text-center py-12">
+          <p className="text-muted">{t('gymSwitcher.platformView')}</p>
+        </div>
+      </>
+    );
+  }
+
+  let activeSubscriptions: any[] = [];
+  try {
+    activeSubscriptions = await queryInGym(
+      { action: 'read', subject: 'subscription' },
+      (db) =>
+        db
+          .select({
+            id: subscriptions.id,
+            payerMemberId: subscriptions.payerMemberId,
+            payerName: members.firstName,
+            payerLastName: members.lastName,
+            planId: subscriptions.planId,
+            startsOn: subscriptions.startsOn,
+            nextInvoiceOn: subscriptions.nextInvoiceOn,
+            priceCentsSnapshot: subscriptions.priceCentsSnapshot,
+          })
+          .from(subscriptions)
+          .leftJoin(members, eq(members.id, subscriptions.payerMemberId))
+          .where(eq(subscriptions.status, 'active')),
+    );
+  } catch (error) {
+    console.error('Failed to fetch subscriptions:', error);
+  }
 
   const formatMur = (cents: number) =>
     (cents / 100).toLocaleString('en-MU', {
