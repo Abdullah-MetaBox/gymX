@@ -108,16 +108,19 @@ export default async function CreateInvoicePage() {
           {activeSubscriptions.length > 0 && (
             <>
               <h3 className="font-semibold text-lg">{t('invoices.createNewInvoice')}</h3>
-              {activeSubscriptions.map((sub) => (
-                <CreateInvoiceForm
-                  key={sub.id}
-                  formId={`form-${sub.id}`}
-                  subscriptionId={sub.id}
-                  payerName={`${sub.payerName} ${sub.payerLastName}`}
-                  amount={sub.priceCentsSnapshot}
-                  defaultStartDate={sub.nextInvoiceOn || today}
-                />
-              ))}
+              {activeSubscriptions.map((sub) => {
+                const defaultDate = (sub.nextInvoiceOn ?? today) as string;
+                return (
+                  <CreateInvoiceForm
+                    key={sub.id}
+                    formId={`form-${sub.id}`}
+                    subscriptionId={sub.id}
+                    payerName={`${sub.payerName} ${sub.payerLastName}`}
+                    amount={sub.priceCentsSnapshot}
+                    defaultStartDate={defaultDate}
+                  />
+                );
+              })}
             </>
           )}
         </div>
