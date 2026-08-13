@@ -31,15 +31,14 @@ export default async function CreateInvoicePage() {
           .select({
             id: subscriptions.id,
             payerMemberId: subscriptions.payerMemberId,
-            payerName: members.firstName,
-            payerLastName: members.lastName,
+            payerName: sql<string>`''`,
+            payerLastName: sql<string>`''`,
             planId: subscriptions.planId,
             startsOn: subscriptions.startsOn,
             nextInvoiceOn: subscriptions.nextInvoiceOn,
             priceCentsSnapshot: subscriptions.priceCentsSnapshot,
           })
           .from(subscriptions)
-          .leftJoin(members, eq(members.id, subscriptions.payerMemberId))
           .where(eq(subscriptions.status, 'active')),
     );
   } catch (error) {
