@@ -20,7 +20,7 @@ export default async function CreateInvoicePage() {
           payerMemberId: subscriptions.payerMemberId,
           payerName: members.firstName,
           payerLastName: members.lastName,
-          planName: plans.name,
+          planNameI18n: plans.nameI18n,
           startsOn: subscriptions.startsOn,
           nextInvoiceOn: subscriptions.nextInvoiceOn,
           priceCentsSnapshot: subscriptions.priceCentsSnapshot,
@@ -75,12 +75,14 @@ export default async function CreateInvoicePage() {
                 </tr>
               </thead>
               <tbody>
-                {activeSubscriptions.map((sub) => (
+                {activeSubscriptions.map((sub) => {
+                  const planName = (sub.planNameI18n as any)?.en || 'Plan';
+                  return (
                   <tr key={sub.id}>
                     <Td className="font-medium">
                       {sub.payerName} {sub.payerLastName}
                     </Td>
-                    <Td className="text-muted text-sm">{sub.planName}</Td>
+                    <Td className="text-muted text-sm">{planName}</Td>
                     <Td className="text-right tabular-nums">{formatMur(sub.priceCentsSnapshot)}</Td>
                     <Td>
                       <button
@@ -94,7 +96,8 @@ export default async function CreateInvoicePage() {
                       </button>
                     </Td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </Table>
           )}
