@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Button, Field, Input, Select } from '../../../../components/ui/index';
-import { updateHouseholdAction } from '../../actions';
+import { updateHouseholdAction } from '../actions';
 
 const formatMemberCode = (seq: number) => `M${String(seq).padStart(5, '0')}`;
 
