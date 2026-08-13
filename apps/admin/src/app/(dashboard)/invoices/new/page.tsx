@@ -1,5 +1,5 @@
-import { subscriptions, subscriptionMembers, members, plans } from '@gymx/db';
-import { eq, and } from 'drizzle-orm';
+import { subscriptions, members, plans } from '@gymx/db';
+import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader, Button, Card, CardHeader, CardTitle, CardBody, Table, Th, Td } from '../../../../components/ui/index';
@@ -20,14 +20,13 @@ export default async function CreateInvoicePage() {
           payerMemberId: subscriptions.payerMemberId,
           payerName: members.firstName,
           payerLastName: members.lastName,
-          planNameI18n: plans.nameI18n,
+          planId: subscriptions.planId,
           startsOn: subscriptions.startsOn,
           nextInvoiceOn: subscriptions.nextInvoiceOn,
           priceCentsSnapshot: subscriptions.priceCentsSnapshot,
         })
         .from(subscriptions)
-        .innerJoin(members, eq(members.id, subscriptions.payerMemberId))
-        .innerJoin(plans, eq(plans.id, subscriptions.planId))
+        .leftJoin(members, eq(members.id, subscriptions.payerMemberId))
         .where(eq(subscriptions.status, 'active')),
   );
 
@@ -75,14 +74,12 @@ export default async function CreateInvoicePage() {
                 </tr>
               </thead>
               <tbody>
-                {activeSubscriptions.map((sub) => {
-                  const planName = (sub.planNameI18n as any)?.en || 'Plan';
-                  return (
+                {activeSubscriptions.map((sub) => (
                   <tr key={sub.id}>
                     <Td className="font-medium">
                       {sub.payerName} {sub.payerLastName}
                     </Td>
-                    <Td className="text-muted text-sm">{planName}</Td>
+                    <Td className="text-muted text-sm">Membership Plan</Td>
                     <Td className="text-right tabular-nums">{formatMur(sub.priceCentsSnapshot)}</Td>
                     <Td>
                       <button
@@ -96,8 +93,7 @@ export default async function CreateInvoicePage() {
                       </button>
                     </Td>
                   </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </Table>
           )}
@@ -108,19 +104,16 @@ export default async function CreateInvoicePage() {
           {activeSubscriptions.length > 0 && (
             <>
               <h3 className="font-semibold text-lg">{t('invoices.createNewInvoice')}</h3>
-              {activeSubscriptions.map((sub) => {
-                const defaultDate = (sub.nextInvoiceOn ?? today) as string;
-                return (
-                  <CreateInvoiceForm
-                    key={sub.id}
-                    formId={`form-${sub.id}`}
-                    subscriptionId={sub.id}
-                    payerName={`${sub.payerName} ${sub.payerLastName}`}
-                    amount={sub.priceCentsSnapshot}
-                    defaultStartDate={defaultDate}
-                  />
-                );
-              })}
+              {activeSubscriptions.map((sub) => (
+                <CreateInvoiceForm
+                  key={sub.id}
+                  formId={`form-${sub.id}`}
+                  subscriptionId={sub.id}
+                  payerName={`${sub.payerName} ${sub.payerLastName}`}
+                  amount={sub.priceCentsSnapshot}
+                  defaultStartDate={sub.nextInvoiceOn ?? today}
+                />
+              ))}
             </>
           )}
         </div>
