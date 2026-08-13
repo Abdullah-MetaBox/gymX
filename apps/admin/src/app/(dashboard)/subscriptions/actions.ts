@@ -2,11 +2,12 @@
 
 // Money helpers for conversions
 import { NotFoundError } from '@gymx/core/errors';
-import { invoiceLines, invoices, subscriptionMembers, subscriptions } from '@gymx/db';
+import { invoiceLines, invoices, subscriptionMembers, subscriptions, members } from '@gymx/db';
 import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { defineAction } from '../../../lib/action';
+import { sendInvoiceEmail } from '../../../lib/email';
 
 const createSubscriptionSchema = z.object({
   planId: z.string().uuid(),
@@ -177,6 +178,17 @@ export const createInvoiceAction = defineAction(
       vatRateBp: sub.vatRateBpSnapshot,
       amountCents: netAmount,
     });
+
+    // Send invoice email to payer
+    const [payer] = await db
+      .select({ email: members.email, firstName: members.firstName })
+      .from(members)
+      .where(eq(members.id, sub.payerMemberId))
+      .limit(1);
+
+    if (payer?.email) {
+      await sendInvoiceEmail(payer.email, payer.firstName, invoice.number, grossAmount, input.dueOn);
+    }
 
     revalidatePath('/invoices');
     revalidatePath(`/subscriptions/${input.subscriptionId}`);
