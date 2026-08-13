@@ -253,7 +253,7 @@ export const holdSubscriptionAction = defineAction(
     const [subscription] = await db
       .update(subscriptions)
       .set({
-        status: 'on_hold',
+        status: 'frozen',
         updatedAt: new Date(),
       })
       .where(and(eq(subscriptions.id, input.subscriptionId), eq(subscriptions.gymId, gymId)))
