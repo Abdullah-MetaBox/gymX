@@ -158,3 +158,54 @@ export async function updateMemberAndRedirect(input: unknown) {
   }
   return result;
 }
+
+const deleteSchema = z.object({ memberId: z.string().uuid() });
+
+export const deleteMemberAction = defineAction(
+  deleteSchema,
+  {
+    permission: { action: 'delete', subject: 'member' },
+    audit: { entity: 'member', action: 'delete', entityId: (input) => (input as { memberId: string }).memberId },
+  },
+  async (input, { db }) => {
+    // Check if member has any active subscriptions
+    const activeSubscriptionCount = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(subscriptions)
+      .innerJoin(subscriptionMembers, eq(subscriptionMembers.subscriptionId, subscriptions.id))
+      .where(eq(subscriptionMembers.memberId, input.memberId))
+      .then((r) => r[0]?.count ?? 0);
+
+    if (activeSubscriptionCount > 0) {
+      return { ok: false, error: 'Cannot delete member with active subscriptions', code: 'MEMBER_HAS_SUBSCRIPTIONS' };
+    }
+
+    await db.delete(members).where(eq(members.id, input.memberId));
+
+    revalidatePath('/members');
+    return { ok: true, data: { id: input.memberId } };
+  },
+);
+
+const archiveSchema = z.object({ memberId: z.string().uuid() });
+
+export const archiveMemberAction = defineAction(
+  archiveSchema,
+  {
+    permission: { action: 'update', subject: 'member' },
+    audit: { entity: 'member', action: 'archive', entityId: (input) => (input as { memberId: string }).memberId },
+  },
+  async (input, { db }) => {
+    const [member] = await db
+      .update(members)
+      .set({ status: 'inactive' })
+      .where(eq(members.id, input.memberId))
+      .returning();
+
+    if (!member) throw new NotFoundError('Member not found');
+
+    revalidatePath('/members');
+    revalidatePath(`/members/${input.memberId}`);
+    return { ok: true, data: { id: member.id } };
+  },
+);

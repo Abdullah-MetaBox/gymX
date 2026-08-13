@@ -19,6 +19,7 @@ import {
 } from '../../../../components/ui/index';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
+import { MemberActions } from './member-actions';
 
 const STATUS_TONE = {
   active: 'success',
@@ -66,9 +67,12 @@ export default async function MemberProfilePage({
               </Button>
             </Link>
             {canEdit && (
-              <Link href={`/members/${memberId}/edit`}>
-                <Button size="sm">{t('common.edit')}</Button>
-              </Link>
+              <>
+                <Link href={`/members/${memberId}/edit`}>
+                  <Button size="sm">{t('common.edit')}</Button>
+                </Link>
+                <MemberActions memberId={memberId} memberName={`${member.firstName} ${member.lastName}`} />
+              </>
             )}
           </div>
         }

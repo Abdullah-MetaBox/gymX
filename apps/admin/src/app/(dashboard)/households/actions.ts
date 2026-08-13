@@ -95,3 +95,54 @@ export async function createHouseholdAndRedirect(input: unknown) {
   }
   return result;
 }
+
+const updateSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(120),
+  payerMemberId: z.string().uuid().optional().or(z.literal('')),
+});
+
+export const updateHouseholdAction = defineAction(
+  updateSchema,
+  {
+    permission: { action: 'update', subject: 'household' },
+    audit: { entity: 'household', action: 'update', entityId: (input) => (input as { householdId: string }).householdId },
+  },
+  async (input, { db }) => {
+    const [household] = await db
+      .update(households)
+      .set({
+        name: input.name,
+        payerMemberId: input.payerMemberId || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(households.id, input.householdId))
+      .returning();
+
+    if (!household) throw new NotFoundError('Household not found');
+
+    revalidatePath('/households');
+    revalidatePath(`/households/${input.householdId}`);
+    return { id: household.id };
+  },
+);
+
+const deleteSchema = z.object({ householdId: z.string().uuid() });
+
+export const deleteHouseholdAction = defineAction(
+  deleteSchema,
+  {
+    permission: { action: 'delete', subject: 'household' },
+    audit: { entity: 'household', action: 'delete', entityId: (input) => (input as { householdId: string }).householdId },
+  },
+  async (input, { db }) => {
+    // Remove all members from household first
+    await db.delete(householdMembers).where(eq(householdMembers.householdId, input.householdId));
+
+    // Delete the household
+    await db.delete(households).where(eq(households.id, input.householdId));
+
+    revalidatePath('/households');
+    return { ok: true, data: { id: input.householdId } };
+  },
+);

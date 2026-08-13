@@ -19,6 +19,7 @@ import {
 import { AddHouseholdMemberForm } from '../../../../components/add-household-member-form';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
+import { HouseholdActions } from './household-actions';
 
 export default async function HouseholdDetailPage({
   params,
@@ -102,11 +103,17 @@ export default async function HouseholdDetailPage({
             : t('households.payer') + ': —'
         }
         actions={
-          <Link href="/households">
-            <Button variant="secondary" size="sm">
-              {t('common.back')}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/households">
+              <Button variant="secondary" size="sm">
+                {t('common.back')}
+              </Button>
+            </Link>
+            <Link href={`/households/${householdId}/edit`}>
+              <Button size="sm">{t('common.edit')}</Button>
+            </Link>
+            <HouseholdActions householdId={householdId} householdName={household.name} />
+          </div>
         }
       />
 

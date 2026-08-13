@@ -136,7 +136,12 @@
     "overview": "Overview",
     "noDocuments": "No documents on file.",
     "noConsents": "No consents recorded.",
-    "importLink": "Import from CSV"
+    "importLink": "Import from CSV",
+    "archive": "Archive",
+    "archiveConfirmTitle": "Archive this member?",
+    "archiveConfirmBody": "{name} will be marked as inactive and will not be able to access the gym until reactivated.",
+    "deleteConfirmTitle": "Delete this member?",
+    "deleteConfirmBody": "This action cannot be undone. Make sure {name} has no active subscriptions before deleting."
   },
   "households": {
     "title": "Family Memberships",
@@ -159,7 +164,10 @@
     "empty": "No members in this family membership yet.",
     "created": "Family membership created",
     "updated": "Family membership updated",
-    "memberCount": "{count, plural, one {# member} other {# members}}"
+    "memberCount": "{count, plural, one {# member} other {# members}}",
+    "editTitle": "Edit family membership",
+    "deleteConfirmTitle": "Delete this family membership?",
+    "deleteConfirmBody": "All members will be removed from {name}. This action cannot be undone."
   },
   "guestPasses": {
     "title": "Guest passes",

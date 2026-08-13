@@ -3,7 +3,7 @@
 // Money helpers for conversions
 import { NotFoundError } from '@gymx/core/errors';
 import { invoiceLines, invoices, subscriptionMembers, subscriptions } from '@gymx/db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { defineAction } from '../../../lib/action';
@@ -181,5 +181,156 @@ export const createInvoiceAction = defineAction(
     revalidatePath('/invoices');
     revalidatePath(`/subscriptions/${input.subscriptionId}`);
     return { id: invoice.id };
+  },
+);
+
+// Update subscription (price, payer, end date)
+const updateSubscriptionSchema = z.object({
+  subscriptionId: z.string().uuid(),
+  payerMemberId: z.string().uuid().optional(),
+  priceMajor: z.coerce.number().min(0).optional(),
+  endsOn: z.string().date().optional().or(z.literal('')),
+});
+
+export const updateSubscriptionAction = defineAction(
+  updateSubscriptionSchema,
+  {
+    permission: { action: 'update', subject: 'subscription' },
+    audit: {
+      entity: 'subscription',
+      action: 'update',
+      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
+    },
+  },
+  async (input, { db, actor }) => {
+    const gymId = actor.gymId!;
+    const updateData: Record<string, any> = { updatedAt: new Date() };
+
+    if (input.payerMemberId) updateData.payerMemberId = input.payerMemberId;
+    if (input.priceMajor !== undefined) updateData.priceCentsSnapshot = Math.round(input.priceMajor * 100);
+    if (input.endsOn) updateData.endsOn = input.endsOn;
+
+    const [subscription] = await db
+      .update(subscriptions)
+      .set(updateData)
+      .where(and(eq(subscriptions.id, input.subscriptionId), eq(subscriptions.gymId, gymId)))
+      .returning();
+
+    if (!subscription) throw new NotFoundError('Subscription not found');
+
+    revalidatePath('/subscriptions');
+    revalidatePath(`/subscriptions/${input.subscriptionId}`);
+    return { id: subscription.id };
+  },
+);
+
+// Hold a subscription (pause)
+const holdSubscriptionSchema = z.object({
+  subscriptionId: z.string().uuid(),
+  holdStartsOn: z.string().date(),
+  holdEndsOn: z.string().date(),
+  reason: z.string().max(500).optional(),
+});
+
+export const holdSubscriptionAction = defineAction(
+  holdSubscriptionSchema,
+  {
+    permission: { action: 'update', subject: 'subscription' },
+    audit: {
+      entity: 'subscription',
+      action: 'hold',
+      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
+    },
+  },
+  async (input, { db, actor }) => {
+    const gymId = actor.gymId!;
+
+    // This is a simplified implementation. In Phase 5, this would create a hold record
+    // and extend the subscription end date by the hold duration
+    const holdDurationDays = new Date(input.holdEndsOn).getTime() - new Date(input.holdStartsOn).getTime();
+    const durationMs = holdDurationDays / (1000 * 60 * 60 * 24);
+
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({
+        status: 'on_hold',
+        updatedAt: new Date(),
+      })
+      .where(and(eq(subscriptions.id, input.subscriptionId), eq(subscriptions.gymId, gymId)))
+      .returning();
+
+    if (!subscription) throw new NotFoundError('Subscription not found');
+
+    revalidatePath('/subscriptions');
+    revalidatePath(`/subscriptions/${input.subscriptionId}`);
+    return { id: subscription.id };
+  },
+);
+
+// Resume a subscription
+const resumeSubscriptionSchema = z.object({ subscriptionId: z.string().uuid() });
+
+export const resumeSubscriptionAction = defineAction(
+  resumeSubscriptionSchema,
+  {
+    permission: { action: 'update', subject: 'subscription' },
+    audit: {
+      entity: 'subscription',
+      action: 'resume',
+      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
+    },
+  },
+  async (input, { db, actor }) => {
+    const gymId = actor.gymId!;
+
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(and(eq(subscriptions.id, input.subscriptionId), eq(subscriptions.gymId, gymId)))
+      .returning();
+
+    if (!subscription) throw new NotFoundError('Subscription not found');
+
+    revalidatePath('/subscriptions');
+    revalidatePath(`/subscriptions/${input.subscriptionId}`);
+    return { id: subscription.id };
+  },
+);
+
+// Delete a subscription (only if no invoices exist)
+const deleteSubscriptionSchema = z.object({ subscriptionId: z.string().uuid() });
+
+export const deleteSubscriptionAction = defineAction(
+  deleteSubscriptionSchema,
+  {
+    permission: { action: 'delete', subject: 'subscription' },
+    audit: {
+      entity: 'subscription',
+      action: 'delete',
+      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
+    },
+  },
+  async (input, { db, actor }) => {
+    const gymId = actor.gymId!;
+
+    // Check if subscription has any invoices
+    const invoiceCount = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(invoices)
+      .where(and(eq(invoices.subscriptionId, input.subscriptionId), eq(invoices.gymId, gymId)))
+      .then((r) => r[0]?.count ?? 0);
+
+    if (invoiceCount > 0) {
+      return { ok: false, error: 'Cannot delete subscription with invoices', code: 'SUBSCRIPTION_HAS_INVOICES' };
+    }
+
+    // Remove subscription members
+    await db.delete(subscriptionMembers).where(eq(subscriptionMembers.subscriptionId, input.subscriptionId));
+
+    // Delete subscription
+    await db.delete(subscriptions).where(eq(subscriptions.id, input.subscriptionId));
+
+    revalidatePath('/subscriptions');
+    return { ok: true, data: { id: input.subscriptionId } };
   },
 );
