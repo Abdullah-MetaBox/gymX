@@ -111,7 +111,7 @@ export default async function CreateInvoicePage() {
                   subscriptionId={sub.id}
                   payerName={`${sub.payerName} ${sub.payerLastName}`}
                   amount={sub.priceCentsSnapshot}
-                  defaultStartDate={sub.nextInvoiceOn ?? today}
+                  defaultStartDate={(sub.nextInvoiceOn ?? today) as string}
                 />
               ))}
             </>
