@@ -21,7 +21,8 @@
     "confirm": "Confirm",
     "readOnly": "Read only",
     "view": "View",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "select": "Select an option"
   },
   "auth": {
     "signInTitle": "Sign in to GymX",
