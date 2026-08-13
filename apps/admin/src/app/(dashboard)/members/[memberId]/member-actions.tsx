@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '../../../../components/ui/button';
 import { archiveMemberAction, deleteMemberAction } from '../actions';
 
 export function MemberActions({ memberId, memberName }: { memberId: string; memberName: string }) {
