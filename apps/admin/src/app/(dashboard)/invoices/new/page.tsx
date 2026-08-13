@@ -1,5 +1,5 @@
 import { subscriptions, members, plans } from '@gymx/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader, Button, Card, CardHeader, CardTitle, CardBody, Table, Th, Td } from '../../../../components/ui/index';
