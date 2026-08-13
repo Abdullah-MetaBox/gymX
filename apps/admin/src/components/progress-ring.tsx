@@ -32,9 +32,9 @@ export function ProgressRing({ current, max, label, size = 'md' }: ProgressRingP
           cx={config.width / 2}
           cy={config.width / 2}
           r={config.radius}
-          stroke="#D1D5DB"
           strokeWidth="4"
           fill="none"
+          style={{ stroke: 'var(--color-border, #D1D5DB)' }}
         />
         {/* Progress ring */}
         <circle
@@ -51,10 +51,10 @@ export function ProgressRing({ current, max, label, size = 'md' }: ProgressRingP
         />
       </svg>
       <div className="text-center">
-        <p className="text-lg font-bold text-[#0B0B0F]">
+        <p className="text-lg font-bold text-[#0B0B0F] dark:text-[#E5E7EB]">
           {current}/{max}
         </p>
-        <p className="text-xs text-[#6B7280] mt-1">{label}</p>
+        <p className="text-xs text-[#6B7280] dark:text-[#A0A0A8] mt-1">{label}</p>
       </div>
     </div>
   );
