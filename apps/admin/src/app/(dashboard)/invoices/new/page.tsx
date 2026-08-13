@@ -1,5 +1,5 @@
-import { subscriptions, members, plans } from '@gymx/db';
-import { eq, sql } from 'drizzle-orm';
+import { subscriptions } from '@gymx/db';
+import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader, Button, Card, CardHeader, CardTitle, CardBody, Table, Th, Td } from '../../../../components/ui/index';
@@ -24,23 +24,19 @@ export default async function CreateInvoicePage() {
 
   let activeSubscriptions: any[] = [];
   try {
-    activeSubscriptions = await queryInGym(
+    const subs = await queryInGym(
       { action: 'read', subject: 'subscription' },
       (db) =>
         db
-          .select({
-            id: subscriptions.id,
-            payerMemberId: subscriptions.payerMemberId,
-            payerName: sql<string>`''`,
-            payerLastName: sql<string>`''`,
-            planId: subscriptions.planId,
-            startsOn: subscriptions.startsOn,
-            nextInvoiceOn: subscriptions.nextInvoiceOn,
-            priceCentsSnapshot: subscriptions.priceCentsSnapshot,
-          })
+          .select()
           .from(subscriptions)
           .where(eq(subscriptions.status, 'active')),
     );
+    activeSubscriptions = subs.map((s) => ({
+      ...s,
+      payerName: 'Member',
+      payerLastName: s.payerMemberId?.substring(0, 8) || 'Unknown',
+    }));
   } catch (error) {
     console.error('Failed to fetch subscriptions:', error);
   }
