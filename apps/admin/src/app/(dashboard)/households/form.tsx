@@ -1,10 +1,11 @@
 'use client';
 
-import { formatMemberCode } from '@gymx/db';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { Alert, Button, Field, Input, Select } from '../../../components/ui/index';
 import { createHouseholdAndRedirect } from './actions';
+
+const formatMemberCode = (seq: number) => `M${String(seq).padStart(5, '0')}`;
 
 interface NewHouseholdFormProps {
   membersList: Array<{ id: string; firstName: string; lastName: string; memberSeq: number }>;
