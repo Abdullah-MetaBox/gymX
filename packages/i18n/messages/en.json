@@ -328,7 +328,15 @@
     },
     "empty": "No invoices yet.",
     "created": "Invoice created",
-    "updated": "Invoice updated"
+    "updated": "Invoice updated",
+    "createSubtitle": "Create a new invoice for an active subscription.",
+    "selectSubscription": "Active subscriptions",
+    "noActiveSubscriptions": "No active subscriptions to invoice.",
+    "plan": "Plan",
+    "amount": "Amount",
+    "createNewInvoice": "Create invoice",
+    "periodStart": "Period start date",
+    "periodEnd": "Period end date"
   },
   "team": {
     "title": "Team",
