@@ -120,6 +120,7 @@ export function GymForm({
           if (!uploadResponse.ok) {
             setResult({
               ok: false,
+              code: 'upload_failed',
               error: 'Failed to upload logo',
               fieldErrors: { logoUrl: ['Upload failed'] },
             });
@@ -131,6 +132,7 @@ export function GymForm({
         } catch {
           setResult({
             ok: false,
+            code: 'upload_failed',
             error: 'Failed to upload logo',
             fieldErrors: { logoUrl: ['Upload failed'] },
           });
