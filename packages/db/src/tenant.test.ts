@@ -30,9 +30,9 @@ beforeAll(async () => {
     northsideId = gymRows.find((g) => g.slug === 'northside')?.id ?? '';
 
     const userRows = await db.select().from(users);
-    platformAdminId = userRows.find((u) => u.email === 'admin@metabox.test')?.id ?? '';
-    abcManagerId = userRows.find((u) => u.email === 'manager@gymabc.test')?.id ?? '';
-    northsideManagerId = userRows.find((u) => u.email === 'manager@northside.test')?.id ?? '';
+    platformAdminId = userRows.find((u) => u.email === 'admin@metabox.mu')?.id ?? '';
+    abcManagerId = userRows.find((u) => u.email === 'manager@gymabc.mu')?.id ?? '';
+    northsideManagerId = userRows.find((u) => u.email === 'manager@northside.mu')?.id ?? '';
   } finally {
     await ownerSql.end({ timeout: 5 });
   }

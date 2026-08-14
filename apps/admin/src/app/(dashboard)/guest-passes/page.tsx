@@ -93,14 +93,10 @@ export default async function GuestPassesPage() {
                     <tr key={pass.id}>
                       <Td>
                         <p className="font-medium">{pass.guestName}</p>
-                        {pass.guestPhone && (
-                          <p className="text-muted text-xs">{pass.guestPhone}</p>
-                        )}
+                        {pass.guestPhone && <p className="text-muted text-xs">{pass.guestPhone}</p>}
                       </Td>
                       <Td className="text-muted">
-                        {pass.hostFirstName
-                          ? `${pass.hostFirstName} ${pass.hostLastName}`
-                          : '—'}
+                        {pass.hostFirstName ? `${pass.hostFirstName} ${pass.hostLastName}` : '—'}
                       </Td>
                       <Td className="text-muted">{pass.issuedByName ?? '—'}</Td>
                       <Td>

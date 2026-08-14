@@ -12,8 +12,16 @@ import { defineAction } from '../../../lib/action';
 const accessRuleSchema = z.object({
   area: z.enum(['gym', 'pool', 'classes']),
   weekdays: z.array(z.coerce.number().int().min(0).max(6)).optional(),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/).optional().or(z.literal('')),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/).optional().or(z.literal('')),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional()
+    .or(z.literal('')),
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .optional()
+    .or(z.literal('')),
 });
 
 const priceTierSchema = z.object({
@@ -54,7 +62,14 @@ function toRow(input: z.infer<typeof planSchema>) {
       ...(input.descriptionFr ? { fr: input.descriptionFr } : {}),
     },
     type: input.type as 'contract' | 'pass',
-    category: input.category as 'solo' | 'couple' | 'family' | 'group' | 'student' | 'lunch' | 'full',
+    category: input.category as
+      | 'solo'
+      | 'couple'
+      | 'family'
+      | 'group'
+      | 'student'
+      | 'lunch'
+      | 'full',
     billingInterval: (input.billingInterval || null) as 'monthly' | 'quarterly' | 'annual' | null,
     basePriceCents: Math.round(input.basePriceMajor * 100),
     vatInclusive: input.vatInclusive,

@@ -1,8 +1,8 @@
 import { planAccessRules, plans } from '@gymx/db';
-import { Content } from '@gymx/i18n';
 import type { Locale } from '@gymx/i18n';
-import { getTranslations } from 'next-intl/server';
+import { Content } from '@gymx/i18n';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { Badge, Button, EmptyState, PageHeader, Table, Td, Th } from '../../../components/ui/index';
 import { queryInGym } from '../../../lib/action';
 import { requirePageAccess } from '../../../lib/session';
@@ -24,9 +24,7 @@ export default async function PlansPage() {
     queryInGym({ action: 'read', subject: 'plan' }, (db) =>
       db.select().from(plans).orderBy(plans.sortOrder, plans.type),
     ),
-    queryInGym({ action: 'read', subject: 'plan' }, (db) =>
-      db.select().from(planAccessRules),
-    ),
+    queryInGym({ action: 'read', subject: 'plan' }, (db) => db.select().from(planAccessRules)),
   ]);
 
   const rulesByPlan = new Map<string, typeof allRules>();
@@ -87,7 +85,9 @@ export default async function PlansPage() {
                         <span className="text-muted text-xs">—</span>
                       ) : (
                         areas.map((area) => (
-                          <Badge key={area} tone="primary">{t(`plans.areas.${area}`)}</Badge>
+                          <Badge key={area} tone="primary">
+                            {t(`plans.areas.${area}`)}
+                          </Badge>
                         ))
                       )}
                     </div>
@@ -100,7 +100,10 @@ export default async function PlansPage() {
                     )}
                   </Td>
                   <Td>
-                    <Link href={`/plans/${plan.id}/edit`} className="text-muted text-xs hover:underline">
+                    <Link
+                      href={`/plans/${plan.id}/edit`}
+                      className="text-muted text-xs hover:underline"
+                    >
                       {t('common.edit')}
                     </Link>
                   </Td>

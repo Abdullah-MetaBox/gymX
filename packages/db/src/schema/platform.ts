@@ -115,13 +115,26 @@ export const users = pgTable(
     name: text('name').notNull(),
     /** argon2id. Null for accounts that only ever sign in by magic link (Phase 6). */
     passwordHash: text('password_hash'),
+    /**
+     * The Clerk account this user signs in with, linked by email on first
+     * sign-in.
+     *
+     * Identity is Clerk's; authorisation stays here. Every role, RLS predicate
+     * and audit row keys off `id`, so a Clerk account grants nothing until it
+     * resolves to a row in this table — provisioning remains GymX's decision,
+     * not "whoever managed to create a Clerk account".
+     */
+    clerkUserId: text('clerk_user_id'),
     locale: text('locale').notNull().default('en'),
     status: userStatusEnum('status').notNull().default('active'),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('users_email_key').on(table.email)],
+  (table) => [
+    uniqueIndex('users_email_key').on(table.email),
+    uniqueIndex('users_clerk_id_key').on(table.clerkUserId),
+  ],
 );
 
 /** Emails are stored and compared lowercased. Normalise at every boundary. */
@@ -237,4 +250,9 @@ export const TENANT_TABLES = [
 ] as const;
 
 /** Tables whose rows are immutable once written. UPDATE/DELETE revoked from gymx_app. */
-export const APPEND_ONLY_TABLES = ['audit_log', 'payments', 'credit_notes', 'access_events'] as const;
+export const APPEND_ONLY_TABLES = [
+  'audit_log',
+  'payments',
+  'credit_notes',
+  'access_events',
+] as const;

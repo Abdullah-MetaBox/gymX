@@ -139,7 +139,7 @@ export default function SignInPage() {
 GYMABC_MODE=true pnpm dev
 ```
 
-- Sign in as `manager@gymabc.test`
+- Sign in as `manager@gymabc.mu`
 - Verify:
   - Gym switcher is gone ✓
   - Still shows "Gym ABC" in header ✓
@@ -155,7 +155,7 @@ Deploy to Vercel with `GYMABC_MODE=true`:
 ### 3. Client UAT
 
 Share the link with GymABC team:
-- "Can you sign in as manager@gymabc.test with password GymX!dev2026?"
+- "Can you sign in as manager@gymabc.mu with password GymX!dev2026?"
 - Gather feedback on branding, layout, missing features
 
 ## Go-Live Checklist

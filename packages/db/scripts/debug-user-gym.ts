@@ -22,7 +22,7 @@ async function main() {
       .from(schema.users)
       .innerJoin(schema.userRoles, eq(schema.users.id, schema.userRoles.userId))
       .innerJoin(schema.gyms, eq(schema.gyms.id, schema.userRoles.gymId))
-      .where(eq(schema.users.email, 'manager@gymabc.test'));
+      .where(eq(schema.users.email, 'manager@gymabc.mu'));
 
     console.log('Gym ABC user data:', JSON.stringify(gymAbcUsers, null, 2));
   } finally {

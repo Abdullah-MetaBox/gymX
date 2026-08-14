@@ -1,9 +1,20 @@
 import { invoiceLines, invoices, members } from '@gymx/db';
 import { eq } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, Button, Card, CardBody, CardHeader, CardTitle, PageHeader, Table, Td, Th } from '../../../../components/ui/index';
+import { getTranslations } from 'next-intl/server';
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+} from '../../../../components/ui/index';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 
@@ -26,10 +37,7 @@ export default async function InvoiceDetailPage({
         .then((r) => r[0]),
     ),
     queryInGym({ action: 'read', subject: 'invoice' }, (db) =>
-      db
-        .select()
-        .from(invoiceLines)
-        .where(eq(invoiceLines.invoiceId, invoiceId)),
+      db.select().from(invoiceLines).where(eq(invoiceLines.invoiceId, invoiceId)),
     ),
     queryInGym({ action: 'read', subject: 'member' }, (db) =>
       db
@@ -107,7 +115,9 @@ export default async function InvoiceDetailPage({
                         {line.qty} × {fmtMur(line.unitPriceCents)}
                       </p>
                     </div>
-                    <p className="text-right font-medium tabular-nums">{fmtMur(line.amountCents)}</p>
+                    <p className="text-right font-medium tabular-nums">
+                      {fmtMur(line.amountCents)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -124,7 +134,10 @@ export default async function InvoiceDetailPage({
             <div className="space-y-2 text-sm">
               <Row label="Subtotal" value={fmtMur(invoiceRow.subtotalCents)} />
               {invoiceRow.discountCents > 0 && (
-                <Row label={t('invoices.discount')} value={`-${fmtMur(invoiceRow.discountCents)}`} />
+                <Row
+                  label={t('invoices.discount')}
+                  value={`-${fmtMur(invoiceRow.discountCents)}`}
+                />
               )}
               {invoiceRow.vatCents > 0 && (
                 <Row label={t('invoices.vat')} value={fmtMur(invoiceRow.vatCents)} />

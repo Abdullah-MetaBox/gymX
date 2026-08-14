@@ -1,9 +1,10 @@
+import { SignOutButton } from '@clerk/nextjs';
 import { ROLE_LABELS } from '@gymx/core/auth';
 import type { GymBranding } from '@gymx/db';
 import { LOCALE_LABELS, LOCALES } from '@gymx/i18n';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-import { leaveGymAction, signOutAction, switchGymAction, switchLocaleAction } from '../app/actions';
+import { leaveGymAction, switchGymAction, switchLocaleAction } from '../app/actions';
 import { env } from '../lib/env';
 import { navFor } from '../lib/nav';
 import type { ActiveContext } from '../lib/session';
@@ -114,11 +115,12 @@ export async function AppShell({
 
             <ThemeToggle />
 
-            <form action={signOutAction}>
-              <button type="submit" className="rounded-lg px-3 py-1.5 text-sm hover:surface-2">
+            {/* Clerk owns the session, so it performs the sign-out. */}
+            <SignOutButton redirectUrl="/sign-in">
+              <button type="button" className="rounded-lg px-3 py-1.5 text-sm hover:surface-2">
                 {t('common.signOut')}
               </button>
-            </form>
+            </SignOutButton>
           </div>
         </header>
 

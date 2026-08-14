@@ -1,28 +1,29 @@
 import { planAccessRules, planPriceTiers, plans } from '@gymx/db';
-import { Content } from '@gymx/i18n';
 import type { Locale } from '@gymx/i18n';
+import { Content } from '@gymx/i18n';
 import { eq } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { PlanForm } from '../../../../../components/plan-form';
 import { Button, PageHeader } from '../../../../../components/ui/index';
 import { queryInGym } from '../../../../../lib/action';
 import { requirePageAccess } from '../../../../../lib/session';
 import { updatePlanAndRedirect } from '../../actions';
 
-export default async function EditPlanPage({
-  params,
-}: {
-  params: Promise<{ planId: string }>;
-}) {
+export default async function EditPlanPage({ params }: { params: Promise<{ planId: string }> }) {
   const { planId } = await params;
   const t = await getTranslations();
   const context = await requirePageAccess('update', 'plan');
 
   const [planRow, rules, tiers] = await Promise.all([
     queryInGym({ action: 'update', subject: 'plan' }, (db) =>
-      db.select().from(plans).where(eq(plans.id, planId)).limit(1).then((r) => r[0]),
+      db
+        .select()
+        .from(plans)
+        .where(eq(plans.id, planId))
+        .limit(1)
+        .then((r) => r[0]),
     ),
     queryInGym({ action: 'read', subject: 'plan' }, (db) =>
       db.select().from(planAccessRules).where(eq(planAccessRules.planId, planId)),

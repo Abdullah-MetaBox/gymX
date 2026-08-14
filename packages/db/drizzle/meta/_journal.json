@@ -57,6 +57,13 @@
       "when": 1786694334201,
       "tag": "0007_sharp_pepper_potts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786704038461,
+      "tag": "0008_brown_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

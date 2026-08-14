@@ -1,61 +1,40 @@
-import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-import { middleware } from './middleware';
+import { config } from './middleware';
 
 /**
- * The middleware is a cookie check and a redirect, not the security boundary —
- * pages and actions authorise independently. What it CAN do is quietly break
- * things by redirecting something that was never going to have a session.
+ * The middleware no longer decides what is protected — it establishes identity
+ * and nothing else, so the class of bug these tests used to guard against is
+ * gone structurally rather than by assertion.
  *
- * That is not hypothetical: `/api/jobs/run` was initially caught by the
- * matcher, so every scheduled run 307'd to the sign-in page. The jobs stopped
- * running and nothing said so.
+ * That bug was real twice over. `/api/jobs/run` was once caught by the matcher,
+ * so every scheduled run redirected to sign-in and the jobs stopped, silently.
+ * And the Clerk matcher that briefly replaced it treated `/sign-info` as public,
+ * because `'/sign-in(.*)'` consumes any suffix rather than a path segment.
+ *
+ * What still matters is the matcher that decides where middleware RUNS: too
+ * broad and every static asset pays for a Clerk handshake.
  */
+describe('middleware matcher', () => {
+  // Next anchors matcher patterns against the whole path. Testing unanchored
+  // would let the regex match at a later offset and report a skipped asset as
+  // matched — which is exactly what the first version of this test did.
+  const matches = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
 
-function request(path: string, cookie?: string) {
-  return new NextRequest(new URL(`http://localhost${path}`), {
-    headers: cookie ? { cookie } : undefined,
-  });
-}
-
-describe('unauthenticated requests', () => {
-  it('redirects app pages to sign-in', () => {
-    const response = middleware(request('/'));
-    expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toContain('/sign-in');
+  it('is a single pattern', () => {
+    expect(config.matcher).toHaveLength(1);
   });
 
-  it('redirects a nested app page and remembers where it was going', () => {
-    const response = middleware(request('/team'));
-    expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toContain('next=%2Fteam');
-  });
-});
-
-describe('paths that must never be redirected', () => {
-  it('lets the sign-in page through', () => {
-    expect(middleware(request('/sign-in')).status).toBe(200);
+  it.each([
+    ['_next/static', '/_next/static/chunks/main.js'],
+    ['_next/image', '/_next/image'],
+    ['favicon', '/favicon.ico'],
+    ['an svg', '/logo.svg'],
+    ['a png', '/photos/member.png'],
+  ])('skips %s', (_label, path) => {
+    expect(matches(path)).toBe(false);
   });
 
-  it('lets Auth.js endpoints through', () => {
-    expect(middleware(request('/api/auth/csrf')).status).toBe(200);
-  });
-
-  it('lets the scheduled-jobs endpoint through', () => {
-    // The scheduler has no session and never will; the route verifies a bearer
-    // token itself. If this regresses, cron silently stops working.
-    expect(middleware(request('/api/jobs/run')).status).toBe(200);
-  });
-});
-
-describe('authenticated requests', () => {
-  it('passes a request carrying a session cookie', () => {
-    const response = middleware(request('/', 'authjs.session-token=whatever'));
-    expect(response.status).toBe(200);
-  });
-
-  it('accepts the __Secure- prefixed cookie used over HTTPS', () => {
-    const response = middleware(request('/', '__Secure-authjs.session-token=whatever'));
-    expect(response.status).toBe(200);
+  it.each(['/', '/members', '/api/jobs/run', '/sign-in'])('runs on %s', (path) => {
+    expect(matches(path)).toBe(true);
   });
 });

@@ -2,7 +2,17 @@ import { subscriptions } from '@gymx/db';
 import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { PageHeader, Button, Card, CardHeader, CardTitle, CardBody, Table, Th, Td } from '../../../../components/ui/index';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+} from '../../../../components/ui/index';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 import { CreateInvoiceForm } from './create-invoice-form';
@@ -24,13 +34,8 @@ export default async function CreateInvoicePage() {
 
   let activeSubscriptions: any[] = [];
   try {
-    const subs = await queryInGym(
-      { action: 'read', subject: 'subscription' },
-      (db) =>
-        db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.status, 'active')),
+    const subs = await queryInGym({ action: 'read', subject: 'subscription' }, (db) =>
+      db.select().from(subscriptions).where(eq(subscriptions.status, 'active')),
     );
     activeSubscriptions = subs.map((s) => ({
       ...s,

@@ -3,7 +3,6 @@
 import { isLocale } from '@gymx/i18n';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { signOut } from '../auth';
 import { leaveGym, setActiveGym, setLocaleCookie } from '../lib/session';
 
 /** Shell-level actions: switching gym, language, and signing out. */
@@ -31,6 +30,7 @@ export async function switchLocaleAction(formData: FormData): Promise<void> {
   revalidatePath('/', 'layout');
 }
 
-export async function signOutAction(): Promise<void> {
-  await signOut({ redirectTo: '/sign-in' });
-}
+/**
+ * Signing out is Clerk's to perform — it holds the session. The shell renders
+ * Clerk's <SignOutButton> rather than posting here.
+ */

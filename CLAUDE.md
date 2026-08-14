@@ -23,8 +23,8 @@ pnpm db:reset            # drop and recreate the schema (dev only)
 ```
 
 Seeded dev password for every account: `GymX!dev2026`
-(`admin@metabox.test`, `manager@gymabc.test`, `desk@gymabc.test`,
-`accounts@gymabc.test`, `manager@northside.test`, `desk@northside.test`).
+(`admin@metabox.mu`, `manager@gymabc.mu`, `desk@gymabc.mu`,
+`accounts@gymabc.mu`, `manager@northside.mu`, `desk@northside.mu`).
 
 ## Read before writing code
 

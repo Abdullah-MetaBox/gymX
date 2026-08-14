@@ -19,6 +19,7 @@
     "db:migrate": "pnpm --filter @gymx/db migrate",
     "db:bootstrap": "pnpm --filter @gymx/db bootstrap",
     "db:seed": "pnpm --filter @gymx/db seed",
+    "db:clerk-sync": "pnpm --filter @gymx/db clerk-sync",
     "db:reset": "pnpm --filter @gymx/db reset",
     "db:studio": "pnpm --filter @gymx/db studio"
   },

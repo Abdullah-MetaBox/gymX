@@ -34,10 +34,10 @@ Sign in with any seeded account — password `GymX!dev2026`:
 
 | Account | Role |
 |---|---|
-| `admin@metabox.test` | Platform admin |
-| `manager@gymabc.test` | Gym manager |
-| `desk@gymabc.test` | Staff / front desk |
-| `accounts@gymabc.test` | Accountant (read-only) |
+| `admin@metabox.mu` | Platform admin |
+| `manager@gymabc.mu` | Gym manager |
+| `desk@gymabc.mu` | Staff / front desk |
+| `accounts@gymabc.mu` | Accountant (read-only) |
 
 A second gym, Northside Fitness, exists so tenant isolation is testable against
 real data rather than an empty table.

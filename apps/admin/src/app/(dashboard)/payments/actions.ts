@@ -1,5 +1,6 @@
 'use server';
 
+import { NotFoundError } from '@gymx/core/errors';
 import {
   creditNotes,
   paymentAllocations,
@@ -9,8 +10,7 @@ import {
   tills,
   writeOffs,
 } from '@gymx/db';
-import { NotFoundError } from '@gymx/core/errors';
-import { eq, and } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { defineAction } from '../../../lib/action';
@@ -32,10 +32,7 @@ export const createTillAction = defineAction(
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
 
-    const [till] = await db
-      .insert(tills)
-      .values({ gymId, name: input.name })
-      .returning();
+    const [till] = await db.insert(tills).values({ gymId, name: input.name }).returning();
 
     if (!till) throw new NotFoundError('Could not create till');
 
@@ -121,12 +118,7 @@ export const closeTillShiftAction = defineAction(
     const shiftPayments = await db
       .select()
       .from(payments)
-      .where(
-        and(
-          eq(payments.tillShiftId, input.tillShiftId),
-          eq(payments.gymId, gymId),
-        ),
-      );
+      .where(and(eq(payments.tillShiftId, input.tillShiftId), eq(payments.gymId, gymId)));
 
     const totalPaymentsCents = shiftPayments.reduce((sum, p) => sum + p.amountCents, 0);
 
@@ -229,12 +221,7 @@ export const allocatePaymentAction = defineAction(
     const [payment] = await db
       .select()
       .from(payments)
-      .where(
-        and(
-          eq(payments.id, input.paymentId),
-          eq(payments.gymId, gymId),
-        ),
-      )
+      .where(and(eq(payments.id, input.paymentId), eq(payments.gymId, gymId)))
       .limit(1);
 
     if (!payment) throw new NotFoundError('Payment not found');

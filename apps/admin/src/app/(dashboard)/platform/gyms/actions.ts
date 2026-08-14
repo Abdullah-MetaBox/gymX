@@ -47,11 +47,7 @@ const settingsSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, 'Use a 6-digit hex colour')
     .optional()
     .or(z.literal('')),
-  logoUrl: z
-    .string()
-    .url('Enter a valid URL')
-    .optional()
-    .or(z.literal('')),
+  logoUrl: z.string().url('Enter a valid URL').optional().or(z.literal('')),
   enabledModules: z.array(z.string()).default([]),
 });
 

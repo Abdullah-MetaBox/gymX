@@ -7,16 +7,16 @@ All accounts use password: `GymX!dev2026`
 ### By Role
 
 #### 1. Platform Admin (Metabox staff)
-- **Email:** `admin@metabox.test`
+- **Email:** `admin@metabox.mu`
 - **Gym:** None (must `assumeGym()` to enter a gym)
 - **Power:** Full system access — create gyms, manage users, audit log
 
 **Demo walkthrough:**
-1. Sign in as admin@metabox.test
+1. Sign in as admin@metabox.mu
 2. Note: No dashboard yet (admin sees the platform console)
 3. Click the gym switcher (top-left, shows "Platform")
 4. Click "Assume Gym" next to "Gym ABC" — this is how admin enters tenant data
-5. Notice the audit log now shows `admin@metabox.test assumeGym("Gym ABC")` (cross-tenant access is tracked)
+5. Notice the audit log now shows `admin@metabox.mu assumeGym("Gym ABC")` (cross-tenant access is tracked)
 6. Return to platform → try the other gym (Northside)
 
 **Key talking points:**
@@ -27,12 +27,12 @@ All accounts use password: `GymX!dev2026`
 ---
 
 #### 2. Gym Manager (GymABC owner/operator)
-- **Email:** `manager@gymabc.test`
+- **Email:** `manager@gymabc.mu`
 - **Gym:** Gym ABC
 - **Power:** Everything inside their gym — members, plans, billing, access, staff management
 
 **Demo walkthrough:**
-1. Sign in as manager@gymabc.test
+1. Sign in as manager@gymabc.mu
 2. Lands directly on dashboard (sees their gym by default)
 3. Left sidebar shows: Members, Plans, Subscriptions, Payments, Access, Reports
 4. Walk through each section:
@@ -53,12 +53,12 @@ All accounts use password: `GymX!dev2026`
 ---
 
 #### 3. Staff / Front Desk
-- **Email:** `desk@gymabc.test`
+- **Email:** `desk@gymabc.mu`
 - **Gym:** Gym ABC
 - **Power:** Day-to-day operations — members, subscriptions, guest passes, payments, access
 
 **Demo walkthrough:**
-1. Sign in as desk@gymabc.test
+1. Sign in as desk@gymabc.mu
 2. Dashboard shows access control, members, payments only
 3. **Left sidebar is much shorter** — note they can't see:
    - Plans (pricing is locked)
@@ -81,12 +81,12 @@ All accounts use password: `GymX!dev2026`
 ---
 
 #### 4. Accountant (Finance/Bookkeeping)
-- **Email:** `accounts@gymabc.test`
+- **Email:** `accounts@gymabc.mu`
 - **Gym:** Gym ABC
 - **Power:** Read and export only — financial reports, reconciliation, audit trails
 
 **Demo walkthrough:**
-1. Sign in as accounts@gymabc.test
+1. Sign in as accounts@gymabc.mu
 2. Dashboard shows only read-only panels
 3. **Zero edit buttons anywhere** — every button is "Export" or "View"
 4. Can access:

@@ -15,9 +15,9 @@ import {
 import { resolveLocale } from '@gymx/i18n';
 import { eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
-import { auth } from '../auth';
+import { resolveGymxUserId } from './clerk-identity';
 
 export const ACTIVE_GYM_COOKIE = 'gymx.gym';
 export const LOCALE_COOKIE = 'gymx.locale';
@@ -54,8 +54,10 @@ export interface Principal {
  * nested pages cost one round trip rather than four.
  */
 export const getPrincipal = cache(async (): Promise<Principal | null> => {
-  const session = await auth();
-  const userId = session?.user?.id;
+  // Clerk says who signed in; this resolves that to the GymX user they act as.
+  // A Clerk session with no matching row here is authenticated and unauthorised,
+  // which is exactly right — see lib/clerk-identity.ts.
+  const userId = await resolveGymxUserId();
   if (!userId) return null;
 
   // withActor sets app.user_id and nothing else: policies let a user read
@@ -204,18 +206,23 @@ export async function requireActiveContext(): Promise<ActiveContext> {
 }
 
 /**
- * Page-level permission gate.
+ * Page-level gate: authenticate, then authorise.
  *
- * Server *actions* throw ForbiddenError, which the action pipeline turns into
- * a typed failure the form can render. A *page* has nowhere to render that to,
- * so an uncaught throw becomes a 500 — a denied page must look like a page
- * that is not there, not like a broken one.
+ * The two failures are deliberately different. Signed out is a *redirect* —
+ * the visitor can fix it by signing in, and 500ing at them helps nobody. Signed
+ * in without the permission is a *404*: a page you may not see should look like
+ * a page that is not there, never like a broken one, and never like a page that
+ * exists but is being withheld.
  *
- * Every page that queries a permissioned resource calls this first, which also
- * keeps the page and the sidebar agreeing about what a role can reach.
+ * This is now the only thing standing between an anonymous request and a page,
+ * because the middleware establishes identity and protects nothing — see
+ * middleware.ts. Every page that queries a permissioned resource calls this
+ * first, which also keeps the page and the sidebar agreeing about what a role
+ * can reach.
  */
 export async function requirePageAccess(action: Action, subject: Subject): Promise<ActiveContext> {
-  const context = await requireActiveContext();
+  const context = await getActiveContext();
+  if (!context) redirect('/sign-in');
   if (!can(context.actor.role, action, subject)) notFound();
   return context;
 }

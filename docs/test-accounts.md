@@ -6,7 +6,7 @@ All seeded accounts use password: **`GymX!dev2026`**
 
 | Account | Email | Gym | Access |
 |---------|-------|-----|--------|
-| Platform Admin | `admin@metabox.test` | None (use `assumeGym()`) | Full system, all gyms, cross-tenant access is audited |
+| Platform Admin | `admin@metabox.mu` | None (use `assumeGym()`) | Full system, all gyms, cross-tenant access is audited |
 
 **Capabilities:**
 - Create/edit gyms
@@ -28,7 +28,7 @@ All seeded accounts use password: **`GymX!dev2026`**
 ### Manager
 | Account | Email | Gym | Access |
 |---------|-------|-----|--------|
-| Gym Manager | `manager@gymabc.test` | Gym ABC | Full control: members, plans, billing, access, reports, staff |
+| Gym Manager | `manager@gymabc.mu` | Gym ABC | Full control: members, plans, billing, access, reports, staff |
 
 **Capabilities:**
 - CRUD members, households, subscriptions
@@ -49,7 +49,7 @@ All seeded accounts use password: **`GymX!dev2026`**
 ### Front Desk / Staff
 | Account | Email | Gym | Access |
 |---------|-------|-----|--------|
-| Staff / Desk | `desk@gymabc.test` | Gym ABC | Day-to-day operations: check members, create subscriptions, record payments, manage access |
+| Staff / Desk | `desk@gymabc.mu` | Gym ABC | Day-to-day operations: check members, create subscriptions, record payments, manage access |
 
 **Capabilities:**
 - Search members, create/update member info (cannot delete)
@@ -76,7 +76,7 @@ All seeded accounts use password: **`GymX!dev2026`**
 ### Accountant / Finance
 | Account | Email | Gym | Access |
 |---------|-------|-----|--------|
-| Accountant | `accounts@gymabc.test` | Gym ABC | Read-only: audit trail, reconciliation, VAT calculation, member/payment exports |
+| Accountant | `accounts@gymabc.mu` | Gym ABC | Read-only: audit trail, reconciliation, VAT calculation, member/payment exports |
 
 **Capabilities:**
 - View members (export to CSV)
@@ -104,10 +104,10 @@ All seeded accounts use password: **`GymX!dev2026`**
 
 | Account | Email | Gym | Access |
 |---------|-------|-----|--------|
-| Manager | `manager@northside.test` | Northside | Full control of Northside only |
-| Staff | `desk@northside.test` | Northside | Day-to-day operations for Northside only |
+| Manager | `manager@northside.mu` | Northside | Full control of Northside only |
+| Staff | `desk@northside.mu` | Northside | Day-to-day operations for Northside only |
 
-**Demo use:** Show that manager@northside.test cannot see GymABC's members even when browsing. Data is isolated by RLS.
+**Demo use:** Show that manager@northside.mu cannot see GymABC's members even when browsing. Data is isolated by RLS.
 
 ---
 
@@ -154,10 +154,10 @@ pnpm db:seed
 ## Demo Flow
 
 ### 15-min quick demo
-1. Sign in as **manager@gymabc.test** → show dashboard, members list
+1. Sign in as **manager@gymabc.mu** → show dashboard, members list
 2. Create a test member → show form validation
-3. Sign in as **desk@gymabc.test** → show reduced sidebar, no pricing/settings
-4. Sign in as **accounts@gymabc.test** → show read-only, export buttons
+3. Sign in as **desk@gymabc.mu** → show reduced sidebar, no pricing/settings
+4. Sign in as **accounts@gymabc.mu** → show read-only, export buttons
 
 ### 30-min detailed demo
 1. **Admin**: Sign in, assume gym, show audit log of cross-tenant action

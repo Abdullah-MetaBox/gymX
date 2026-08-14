@@ -1,3 +1,4 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import { registerBuiltInModules } from '@gymx/modules';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
@@ -31,16 +32,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: must run before paint */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-      </head>
-      <body>
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang={locale} suppressHydrationWarning>
+        <head>
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: must run before paint */}
+          <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        </head>
+        <body>
+          <NextIntlClientProvider messages={messages} locale={locale}>
+            {children}
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -1,11 +1,11 @@
 import { can } from '@gymx/core/auth';
 import { planAccessRules, planPriceTiers, plans } from '@gymx/db';
-import { Content } from '@gymx/i18n';
 import type { Locale } from '@gymx/i18n';
+import { Content } from '@gymx/i18n';
 import { eq } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import {
   Badge,
   Button,
@@ -20,18 +20,19 @@ import { requirePageAccess } from '../../../../lib/session';
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default async function PlanDetailPage({
-  params,
-}: {
-  params: Promise<{ planId: string }>;
-}) {
+export default async function PlanDetailPage({ params }: { params: Promise<{ planId: string }> }) {
   const { planId } = await params;
   const t = await getTranslations();
   const context = await requirePageAccess('read', 'plan');
 
   const [planRow, rules, tiers] = await Promise.all([
     queryInGym({ action: 'read', subject: 'plan' }, (db) =>
-      db.select().from(plans).where(eq(plans.id, planId)).limit(1).then((r) => r[0]),
+      db
+        .select()
+        .from(plans)
+        .where(eq(plans.id, planId))
+        .limit(1)
+        .then((r) => r[0]),
     ),
     queryInGym({ action: 'read', subject: 'plan' }, (db) =>
       db.select().from(planAccessRules).where(eq(planAccessRules.planId, planId)),
@@ -91,16 +92,28 @@ export default async function PlanDetailPage({
               {planRow.joiningFeeCents > 0 && (
                 <Row label={t('plans.joiningFee')} value={fmtMur(planRow.joiningFeeCents)} />
               )}
-              <Row label={t('plans.pricingModel')} value={t(`plans.models.${planRow.pricingModel}`)} />
-              <Row label={t('plans.vatInclusive')} value={planRow.vatInclusive ? t('common.yes') : t('common.no')} />
+              <Row
+                label={t('plans.pricingModel')}
+                value={t(`plans.models.${planRow.pricingModel}`)}
+              />
+              <Row
+                label={t('plans.vatInclusive')}
+                value={planRow.vatInclusive ? t('common.yes') : t('common.no')}
+              />
               {planRow.billingInterval && (
-                <Row label={t('plans.billingInterval')} value={t(`plans.intervals.${planRow.billingInterval}`)} />
+                <Row
+                  label={t('plans.billingInterval')}
+                  value={t(`plans.intervals.${planRow.billingInterval}`)}
+                />
               )}
               {planRow.minTermMonths > 0 && (
                 <Row label={t('plans.minTermMonths')} value={`${planRow.minTermMonths} months`} />
               )}
               {planRow.passDurationDays && (
-                <Row label={t('plans.passDurationDays')} value={`${planRow.passDurationDays} days`} />
+                <Row
+                  label={t('plans.passDurationDays')}
+                  value={`${planRow.passDurationDays} days`}
+                />
               )}
               <div className="flex justify-between">
                 <span className="text-muted shrink-0">{t('plans.active')}</span>
@@ -123,7 +136,9 @@ export default async function PlanDetailPage({
                   <thead>
                     <tr>
                       <th className="text-left text-xs text-muted font-medium pb-1">Size</th>
-                      <th className="text-right text-xs text-muted font-medium pb-1">Price (MUR)</th>
+                      <th className="text-right text-xs text-muted font-medium pb-1">
+                        Price (MUR)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

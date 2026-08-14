@@ -29,14 +29,14 @@ interface SeedUser {
 }
 
 const GYM_ABC_USERS: SeedUser[] = [
-  { email: 'manager@gymabc.test', name: 'Dimitri Rousseau', role: 'gym_manager' },
-  { email: 'desk@gymabc.test', name: 'Priya Ramgoolam', role: 'staff' },
-  { email: 'accounts@gymabc.test', name: 'Kevin Li Ying', role: 'accountant' },
+  { email: 'manager@gymabc.mu', name: 'Dimitri Rousseau', role: 'gym_manager' },
+  { email: 'desk@gymabc.mu', name: 'Priya Ramgoolam', role: 'staff' },
+  { email: 'accounts@gymabc.mu', name: 'Kevin Li Ying', role: 'accountant' },
 ];
 
 const NORTHSIDE_USERS: SeedUser[] = [
-  { email: 'manager@northside.test', name: 'Sandra Mootoo', role: 'gym_manager' },
-  { email: 'desk@northside.test', name: 'Jean-Paul Adam', role: 'staff' },
+  { email: 'manager@northside.mu', name: 'Sandra Mootoo', role: 'gym_manager' },
+  { email: 'desk@northside.mu', name: 'Jean-Paul Adam', role: 'staff' },
 ];
 
 async function main() {
@@ -103,9 +103,23 @@ async function main() {
     await seedLocation(db, gymAbc.id, 'Grand Baie', 'Royal Road, Grand Baie');
     await seedLocation(db, northside.id, 'Curepipe', 'Rue Royale, Curepipe');
 
+    // --- Legacy address migration -----------------------------------------
+    // Seeded accounts used a .test TLD, which Clerk rejects as malformed when
+    // creating an account. Users are upserted by email, so renaming the
+    // constants alone would create a second set beside the existing one.
+    await db.execute(
+      sql`update users
+             set email = replace(email, '.test', '.mu'), updated_at = now()
+           where email like '%.test'
+             and not exists (
+               select 1 from users existing
+                where existing.email = replace(users.email, '.test', '.mu')
+             )`,
+    );
+
     // --- Platform admin --------------------------------------------------
     const platformAdmin = await upsertUser(db, {
-      email: 'admin@metabox.test',
+      email: 'admin@metabox.mu',
       name: 'Metabox Platform Admin',
       passwordHash,
     });
@@ -242,18 +256,16 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
       { gymId, planId: lunchPlan.id, sizeFrom: 2, sizeTo: 2, priceCents: 130_000 },
       { gymId, planId: lunchPlan.id, sizeFrom: 3, sizeTo: null, priceCents: 200_000 },
     ]);
-    await db
-      .insert(schema.planAccessRules)
-      .values([
-        {
-          gymId,
-          planId: lunchPlan.id,
-          area: 'gym',
-          weekdays: null,
-          startTime: '11:00',
-          endTime: '13:00',
-        },
-      ]);
+    await db.insert(schema.planAccessRules).values([
+      {
+        gymId,
+        planId: lunchPlan.id,
+        area: 'gym',
+        weekdays: null,
+        startTime: '11:00',
+        endTime: '13:00',
+      },
+    ]);
   }
 
   // Student membership — gym + pool, proof of enrolment required.
@@ -379,7 +391,7 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
       memberSeq: 1,
       firstName: 'Dimitri',
       lastName: 'Rousseau',
-      email: 'dimitri@gymabc.test',
+      email: 'dimitri@gymabc.mu',
       phone: '+230 5252 1234',
       dateOfBirth: '1988-05-12',
       gender: 'male',
@@ -397,7 +409,7 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
       memberSeq: 2,
       firstName: 'Priya',
       lastName: 'Ramgoolam',
-      email: 'priya@gymabc.test',
+      email: 'priya@gymabc.mu',
       phone: '+230 5252 2345',
       dateOfBirth: '1992-08-20',
       gender: 'female',
@@ -415,7 +427,7 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
       memberSeq: 3,
       firstName: 'Kevin',
       lastName: 'Li Ying',
-      email: 'kevin@gymabc.test',
+      email: 'kevin@gymabc.mu',
       phone: '+230 5252 3456',
       dateOfBirth: '1995-03-10',
       gender: 'male',
@@ -433,7 +445,7 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
       memberSeq: 4,
       firstName: 'Asha',
       lastName: 'Mootoo',
-      email: 'asha@gymabc.test',
+      email: 'asha@gymabc.mu',
       phone: '+230 5252 4567',
       dateOfBirth: '1990-11-25',
       gender: 'female',
@@ -609,7 +621,7 @@ async function seedGymAbcFamily(db: SeedDb, gymId: string) {
           memberSeq: baseSeq + m.seq,
           firstName: m.first,
           lastName: m.last,
-          email: `${m.first.toLowerCase()}.ramdhani@gymabc.test`,
+          email: `${m.first.toLowerCase()}.ramdhani@gymabc.mu`,
           phone: `+230 5757 ${1000 + baseSeq + m.seq}`,
           dateOfBirth: m.dob,
           gender: m.gender,

@@ -1,9 +1,18 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Alert, Button, Card, CardBody, CardHeader, CardTitle, Field, Input } from '../../../../components/ui/index';
+import {
+  Alert,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Field,
+  Input,
+} from '../../../../components/ui/index';
 import { createInvoiceAction } from '../../subscriptions/actions';
 
 interface CreateInvoiceFormProps {
@@ -62,7 +71,11 @@ export function CreateInvoiceForm({
             <p className="text-2xl font-bold tabular-nums">{formatMur(amount)}</p>
           </div>
 
-          <Field label={t('invoices.periodStart')} htmlFor={`periodStart-${subscriptionId}`} required>
+          <Field
+            label={t('invoices.periodStart')}
+            htmlFor={`periodStart-${subscriptionId}`}
+            required
+          >
             <Input
               id={`periodStart-${subscriptionId}`}
               name="periodStart"

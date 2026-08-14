@@ -1,17 +1,15 @@
+import { SignIn } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { env } from '../../lib/env';
-import { getPrincipal } from '../../lib/session';
-import { AuthSplitLayout } from './auth-split-layout';
-import { SignInForm } from './sign-in-form';
+import { env } from '../../../lib/env';
+import { getPrincipal } from '../../../lib/session';
+import { AuthSplitLayout } from '../auth-split-layout';
 
 /**
- * Branding for the sign-in screen.
- *
- * Nobody is authenticated here, so there is no gym context to read branding
- * from — the deployment itself decides. GYMABC_MODE marks the client-facing
- * build; the default is the platform's own identity.
+ * Catch-all so Clerk can own its own sub-routes (factor-two, SSO callback,
+ * verification) without each needing a page here.
  */
+
 function brandFor(gymAbcMode: boolean) {
   if (gymAbcMode) {
     return {
@@ -30,6 +28,9 @@ function brandFor(gymAbcMode: boolean) {
 }
 
 export default async function SignInPage() {
+  // A Clerk session is not enough — this checks the account resolves to a GymX
+  // user with a role. Someone signed in to Clerk but unknown here stays on this
+  // page rather than bouncing into a dashboard that would deny every query.
   const principal = await getPrincipal();
   if (principal) redirect('/');
 
@@ -50,13 +51,18 @@ export default async function SignInPage() {
             <p className="text-muted mt-1 text-sm">{t('auth.signInSubtitle')}</p>
           </div>
 
-          <SignInForm
-            labels={{
-              email: t('auth.email'),
-              password: t('auth.password'),
-              submit: t('common.signIn'),
-              submitting: t('auth.signingIn'),
-              invalid: t('auth.invalidCredentials'),
+          <SignIn
+            appearance={{
+              elements: {
+                // The page already carries the heading and the brand panel.
+                rootBox: 'w-full',
+                cardBox: 'w-full shadow-none border-none',
+                card: 'shadow-none border-none bg-transparent p-0',
+                header: 'hidden',
+                footer: 'hidden',
+                formButtonPrimary:
+                  'bg-[var(--color-primary)] hover:opacity-90 text-white normal-case text-sm',
+              },
             }}
           />
         </>
