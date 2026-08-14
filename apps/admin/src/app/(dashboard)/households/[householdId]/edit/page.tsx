@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Button, PageHeader } from '../../../../../components/ui/index';
-import { HouseholdForm } from '../edit-form';
 import { queryInGym } from '../../../../../lib/action';
 import { requirePageAccess } from '../../../../../lib/session';
 import { updateHouseholdAction } from '../../actions';
+import { HouseholdForm } from '../edit-form';
 
 export default async function EditHouseholdPage({
   params,
@@ -20,11 +20,21 @@ export default async function EditHouseholdPage({
 
   const [household, membersList] = await Promise.all([
     queryInGym({ action: 'read', subject: 'household' }, (db) =>
-      db.select().from(households).where(eq(households.id, householdId)).limit(1).then((r) => r[0]),
+      db
+        .select()
+        .from(households)
+        .where(eq(households.id, householdId))
+        .limit(1)
+        .then((r) => r[0]),
     ),
     queryInGym({ action: 'read', subject: 'member' }, (db) =>
       db
-        .select({ id: members.id, firstName: members.firstName, lastName: members.lastName, memberSeq: members.memberSeq })
+        .select({
+          id: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          memberSeq: members.memberSeq,
+        })
         .from(members)
         .where(eq(members.status, 'active'))
         .orderBy(asc(members.lastName), asc(members.firstName)),

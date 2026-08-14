@@ -1,5 +1,6 @@
 'use server';
 
+import { NotFoundError } from '@gymx/core/errors';
 import {
   accessDirectionEnum,
   accessEvents,
@@ -8,8 +9,7 @@ import {
   accessResultEnum,
   visits,
 } from '@gymx/db';
-import { NotFoundError } from '@gymx/core/errors';
-import { eq, and } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { defineAction } from '../../../lib/action';
@@ -100,9 +100,7 @@ export const closeVisitAction = defineAction(
 
     // Calculate dwell time in minutes
     const exitedAt = new Date();
-    const dwellMinutes = Math.floor(
-      (exitedAt.getTime() - visit.enteredAt.getTime()) / 60000,
-    );
+    const dwellMinutes = Math.floor((exitedAt.getTime() - visit.enteredAt.getTime()) / 60000);
 
     const [closed] = await db
       .update(visits)

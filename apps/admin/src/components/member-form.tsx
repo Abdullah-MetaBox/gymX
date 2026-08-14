@@ -1,7 +1,7 @@
 'use client';
 
-import { can } from '@gymx/core/auth';
 import type { Role } from '@gymx/core/auth';
+import { can } from '@gymx/core/auth';
 import { LOCALES } from '@gymx/i18n';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
@@ -13,7 +13,9 @@ interface Plan {
 }
 
 interface MemberFormProps {
-  action: (input: unknown) => Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string[]> }>;
+  action: (
+    input: unknown,
+  ) => Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string[]> }>;
   defaultValues?: Record<string, string | null | undefined>;
   memberId?: string;
   role: Role;
@@ -27,7 +29,15 @@ const STATUS_VALUES = ['active', 'inactive', 'suspended', 'frozen'] as const;
 
 const today = new Date().toISOString().split('T')[0];
 
-export function MemberForm({ action, defaultValues = {}, memberId, role, submitLabel, cancelHref, plans = [] }: MemberFormProps) {
+export function MemberForm({
+  action,
+  defaultValues = {},
+  memberId,
+  role,
+  submitLabel,
+  cancelHref,
+  plans = [],
+}: MemberFormProps) {
   const t = useTranslations();
   const [state, formAction, pending] = useActionState(
     async (_prev: unknown, formData: FormData) => {
@@ -41,16 +51,13 @@ export function MemberForm({ action, defaultValues = {}, memberId, role, submitL
     null,
   );
 
-  const fieldError = (name: string) =>
-    state && !state.ok && state.fieldErrors?.[name];
+  const fieldError = (name: string) => state && !state.ok && state.fieldErrors?.[name];
 
   const canManageStatus = can(role, 'update', 'member');
 
   return (
     <form action={formAction} className="space-y-6 max-w-2xl">
-      {state && !state.ok && !state.fieldErrors && (
-        <Alert tone="danger">{state.error}</Alert>
-      )}
+      {state && !state.ok && !state.fieldErrors && <Alert tone="danger">{state.error}</Alert>}
 
       <div className="grid grid-cols-2 gap-4">
         <Field
@@ -83,12 +90,7 @@ export function MemberForm({ action, defaultValues = {}, memberId, role, submitL
 
       <div className="grid grid-cols-2 gap-4">
         <Field label={t('members.email')} htmlFor="email" errors={fieldError('email') || undefined}>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            defaultValue={defaultValues.email ?? ''}
-          />
+          <Input id="email" name="email" type="email" defaultValue={defaultValues.email ?? ''} />
         </Field>
         <Field label={t('members.phone')} htmlFor="phone">
           <Input id="phone" name="phone" type="tel" defaultValue={defaultValues.phone ?? ''} />
@@ -209,11 +211,7 @@ export function MemberForm({ action, defaultValues = {}, memberId, role, submitL
       )}
 
       {canManageStatus && (
-        <Field
-          label={t('members.nfcUid')}
-          htmlFor="nfcUid"
-          hint={t('members.nfcUidHelp')}
-        >
+        <Field label={t('members.nfcUid')} htmlFor="nfcUid" hint={t('members.nfcUidHelp')}>
           <Input
             id="nfcUid"
             name="nfcUid"

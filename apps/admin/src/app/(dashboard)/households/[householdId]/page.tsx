@@ -1,8 +1,9 @@
 import { formatMemberCode, householdMembers, households, members } from '@gymx/db';
-import { eq, and, notInArray, sql } from 'drizzle-orm';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { AddHouseholdMemberForm } from '../../../../components/add-household-member-form';
 import {
   Badge,
   Button,
@@ -16,7 +17,6 @@ import {
   Td,
   Th,
 } from '../../../../components/ui/index';
-import { AddHouseholdMemberForm } from '../../../../components/add-household-member-form';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 import { HouseholdActions } from './household-actions';
@@ -130,7 +130,9 @@ export default async function HouseholdDetailPage({
             <thead>
               <tr>
                 <Th>{t('members.memberCode')}</Th>
-                <Th>{t('members.firstName')} {t('members.lastName')}</Th>
+                <Th>
+                  {t('members.firstName')} {t('members.lastName')}
+                </Th>
                 <Th>{t('households.relationship')}</Th>
                 <Th>{t('members.status')}</Th>
                 <Th />

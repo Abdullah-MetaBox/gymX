@@ -1,12 +1,24 @@
 import { can } from '@gymx/core/auth';
 import { invoices, members, plans, subscriptionMembers, subscriptions } from '@gymx/db';
-import { Content } from '@gymx/i18n';
 import type { Locale } from '@gymx/i18n';
-import { eq, and } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
+import { Content } from '@gymx/i18n';
+import { and, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, Button, Card, CardBody, CardHeader, CardTitle, PageHeader, Table, Td, Th } from '../../../../components/ui/index';
+import { getTranslations } from 'next-intl/server';
+import { SubscriptionActions } from '../../../../components/subscription-actions';
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+} from '../../../../components/ui/index';
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 
@@ -93,10 +105,12 @@ export default async function SubscriptionDetailPage({
             <Link href="/subscriptions">
               <Button variant="secondary">{t('common.back')}</Button>
             </Link>
-            {canEdit && subRow.status === 'active' && (
-              <Button variant="danger" size="sm">
-                {t('subscriptions.cancelled')}
-              </Button>
+            {canEdit && (
+              <SubscriptionActions
+                subscriptionId={subRow.id}
+                status={subRow.status}
+                label={`${payerName} • ${planName}`}
+              />
             )}
           </div>
         }
@@ -197,7 +211,10 @@ export default async function SubscriptionDetailPage({
                     </Badge>
                   </Td>
                   <Td>
-                    <Link href={`/invoices/${invoice.id}`} className="text-muted text-xs hover:underline">
+                    <Link
+                      href={`/invoices/${invoice.id}`}
+                      className="text-muted text-xs hover:underline"
+                    >
                       {t('common.view')}
                     </Link>
                   </Td>

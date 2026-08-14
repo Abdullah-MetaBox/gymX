@@ -1,9 +1,9 @@
 'use client';
 
-import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Alert, Button, Field, Select } from './ui/index';
+import { useActionState } from 'react';
 import { addHouseholdMemberAction } from '../app/(dashboard)/households/actions';
+import { Alert, Button, Field, Select } from './ui/index';
 
 interface Member {
   id: string;
@@ -36,8 +36,7 @@ export function AddHouseholdMemberForm({
     null,
   );
 
-  const fieldError = (name: string) =>
-    state && !state.ok && state.fieldErrors?.[name];
+  const fieldError = (name: string) => state && !state.ok && state.fieldErrors?.[name];
 
   if (availableMembers.length === 0) {
     return (

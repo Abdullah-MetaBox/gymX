@@ -83,7 +83,7 @@ export function GymForm({
     const form = new FormData(event.currentTarget);
 
     const logoFile = form.get('logo') as File | null;
-    let logoUrl = values.logoUrl;
+    const logoUrl = values.logoUrl;
 
     const input: Record<string, unknown> = {
       name: form.get('name'),
@@ -232,11 +232,7 @@ export function GymForm({
             />
           </Field>
 
-          <Field
-            label={labels.accentColor}
-            htmlFor="accentColor"
-            errors={fieldErrors.accentColor}
-          >
+          <Field label={labels.accentColor} htmlFor="accentColor" errors={fieldErrors.accentColor}>
             <Input
               id="accentColor"
               name="accentColor"
@@ -246,11 +242,7 @@ export function GymForm({
             />
           </Field>
 
-          <Field
-            label={labels.logoUrl}
-            htmlFor="logo"
-            errors={fieldErrors.logoUrl}
-          >
+          <Field label={labels.logoUrl} htmlFor="logo" errors={fieldErrors.logoUrl}>
             <div className="space-y-2">
               <input
                 id="logo"

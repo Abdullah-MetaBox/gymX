@@ -20,6 +20,7 @@ import {
 import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 import { MemberActions } from './member-actions';
+import { MembershipPanel } from './membership-panel';
 
 const STATUS_TONE = {
   active: 'success',
@@ -79,6 +80,7 @@ export default async function MemberProfilePage({
                 <MemberActions
                   memberId={memberId}
                   memberName={`${member.firstName} ${member.lastName}`}
+                  canDelete={can(context.actor.role, 'delete', 'member')}
                 />
               </>
             )}
@@ -162,8 +164,17 @@ export default async function MemberProfilePage({
           )}
         </div>
 
-        {/* Right: documents */}
+        {/* Right: membership then documents */}
         <div className="space-y-5 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('subscriptions.membership')}</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <MembershipPanel memberId={memberId} role={context.actor.role} />
+            </CardBody>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>{t('members.documents')}</CardTitle>

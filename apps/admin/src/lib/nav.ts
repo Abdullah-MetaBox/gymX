@@ -49,6 +49,14 @@ const CORE_NAV: NavEntry[] = [
     requires: { action: 'read', subject: 'plan' },
     order: 40,
   },
+  {
+    id: 'access',
+    href: '/access',
+    labelKey: 'checkIn',
+    icon: 'DoorOpen',
+    requires: { action: 'read', subject: 'access_event' },
+    order: 67,
+  },
 ];
 
 /**
@@ -62,7 +70,6 @@ const CORE_NAV: NavEntry[] = [
  *   invoices      /invoices        read: invoice
  *   payments      /payments        read: payment
  *   tillShifts    /till-shifts     read: till_shift
- *   access        /access          read: access_event — currently a "Coming soon" stub
  *   team          /team            read: user
  *   auditLog      /audit           read: audit_log
  *   settings      /settings        update: gym

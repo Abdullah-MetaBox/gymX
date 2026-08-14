@@ -1,8 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Alert, Button, Field, Input, Select } from '../../../../components/ui/index';
 import { updateHouseholdAction } from '../actions';
 
@@ -42,20 +42,11 @@ export function HouseholdForm({
     <form action={formAction} className="max-w-md space-y-4">
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
 
-      <Field
-        label={t('households.name')}
-        htmlFor="name"
-        required
-        hint={t('households.nameHelp')}
-      >
+      <Field label={t('households.name')} htmlFor="name" required hint={t('households.nameHelp')}>
         <Input id="name" name="name" defaultValue={defaultName} required />
       </Field>
 
-      <Field
-        label={t('households.payer')}
-        htmlFor="payerMemberId"
-        hint={t('households.payerHelp')}
-      >
+      <Field label={t('households.payer')} htmlFor="payerMemberId" hint={t('households.payerHelp')}>
         <Select id="payerMemberId" name="payerMemberId" defaultValue={defaultPayerMemberId || ''}>
           <option value="">— {t('common.select')}</option>
           {membersList.map((member) => (

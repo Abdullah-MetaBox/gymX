@@ -1,8 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { memo } from 'react';
 import { StatusBadge } from './status-badge';
-import Link from 'next/link';
 
 interface MemberCardProps {
   id: string;
@@ -56,7 +56,9 @@ function MemberCardComponent({
               👥 {household.name} ({household.memberCount})
             </span>
           )}
-          {joinedDate && <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Joined {joinedDate}</span>}
+          {joinedDate && (
+            <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">Joined {joinedDate}</span>
+          )}
         </div>
       </div>
 

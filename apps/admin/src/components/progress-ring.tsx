@@ -12,7 +12,8 @@ export function ProgressRing({ current, max, label, size = 'md' }: ProgressRingP
 
   // Determine color based on percentage
   let ringColor = '#10B981'; // Green (0-70%)
-  if (percentage >= 90) ringColor = '#EF4444'; // Red (90%+)
+  if (percentage >= 90)
+    ringColor = '#EF4444'; // Red (90%+)
   else if (percentage >= 70) ringColor = '#D946EF'; // Purple (70-90%)
 
   const sizeConfig = {

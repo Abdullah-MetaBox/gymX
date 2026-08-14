@@ -18,10 +18,7 @@ interface StatusBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const STATUS_CONFIG: Record<
-  StatusType,
-  { icon: string; bg: string; text: string }
-> = {
+const STATUS_CONFIG: Record<StatusType, { icon: string; bg: string; text: string }> = {
   active: { icon: '●', bg: 'bg-[#10B981]/15', text: 'text-[#10B981]' },
   inactive: { icon: '○', bg: 'bg-[#4B5563]/20', text: 'text-[#B5BAC1]' },
   'on-hold': { icon: '⏸', bg: 'bg-[#D946EF]/15', text: 'text-[#D946EF]' },

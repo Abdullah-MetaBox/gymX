@@ -46,7 +46,11 @@ export const addHouseholdMemberAction = defineAction(
   addMemberSchema,
   {
     permission: { action: 'update', subject: 'household' },
-    audit: { entity: 'household', action: 'add_member', entityId: (result) => (result as { householdId: string }).householdId },
+    audit: {
+      entity: 'household',
+      action: 'add_member',
+      entityId: (result) => (result as { householdId: string }).householdId,
+    },
   },
   async (input, { db }) => {
     await db

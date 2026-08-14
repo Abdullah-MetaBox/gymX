@@ -27,12 +27,7 @@ export function NewHouseholdForm({ membersList }: NewHouseholdFormProps) {
     <form action={formAction} className="max-w-md space-y-4">
       {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
 
-      <Field
-        label={t('households.name')}
-        htmlFor="name"
-        required
-        hint={t('households.nameHelp')}
-      >
+      <Field label={t('households.name')} htmlFor="name" required hint={t('households.nameHelp')}>
         <Input id="name" name="name" required />
       </Field>
 

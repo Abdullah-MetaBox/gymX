@@ -1,9 +1,21 @@
 'use server';
 
-import { Money } from '@gymx/core';
+import { Money, Pricing } from '@gymx/core';
+import { can } from '@gymx/core/auth';
 import { ConflictError, NotFoundError } from '@gymx/core/errors';
-import { invoiceLines, invoices, subscriptionMembers, subscriptions, members } from '@gymx/db';
-import { eq, and, sql } from 'drizzle-orm';
+import {
+  gyms,
+  householdMembers,
+  households,
+  invoiceLines,
+  invoices,
+  members,
+  planPriceTiers,
+  plans,
+  subscriptionMembers,
+  subscriptions,
+} from '@gymx/db';
+import { and, eq, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { defineAction } from '../../../lib/action';
@@ -60,6 +72,140 @@ export const createSubscriptionAction = defineAction(
       .values({ subscriptionId: subscription.id, memberId: input.payerMemberId, gymId })
       .onConflictDoNothing();
 
+    revalidatePath('/subscriptions');
+    return { id: subscription.id };
+  },
+);
+
+/**
+ * Assign a plan to a single member or to a whole family.
+ *
+ * The price is derived server-side from the plan's tier table rather than taken
+ * from the form: `staff` holds subscription:create, and the matrix says the
+ * front desk "changes no prices". A caller who may edit plans can override.
+ */
+const assignPlanSchema = z
+  .object({
+    planId: z.string().uuid(),
+    scope: z.enum(['member', 'family']),
+    memberId: z.string().uuid().optional(),
+    householdId: z.string().uuid().optional(),
+    startsOn: z.string().date(),
+    priceMajorOverride: z.coerce.number().min(0).optional(),
+  })
+  .refine((v) => (v.scope === 'member' ? !!v.memberId : !!v.householdId), {
+    message: 'Choose who the plan is for.',
+    path: ['scope'],
+  });
+
+export const assignPlanAction = defineAction(
+  assignPlanSchema,
+  {
+    permission: { action: 'create', subject: 'subscription' },
+    audit: { entity: 'subscription', action: 'assign' },
+  },
+  async (input, { db, actor }) => {
+    const gymId = actor.gymId!;
+
+    const [plan] = await db
+      .select()
+      .from(plans)
+      .where(and(eq(plans.id, input.planId), eq(plans.gymId, gymId)))
+      .limit(1);
+    if (!plan) throw new NotFoundError('Plan not found');
+
+    // --- Who is covered, and who pays --------------------------------------
+    let coveredMemberIds: string[];
+    let payerMemberId: string;
+
+    if (input.scope === 'family') {
+      const rows = await db
+        .select({
+          memberId: householdMembers.memberId,
+          relationship: householdMembers.relationship,
+          payerMemberId: households.payerMemberId,
+        })
+        .from(householdMembers)
+        .innerJoin(households, eq(households.id, householdMembers.householdId))
+        .where(eq(householdMembers.householdId, input.householdId!));
+
+      if (rows.length === 0) throw new NotFoundError('That family has no members');
+
+      coveredMemberIds = rows.map((r) => r.memberId);
+
+      // Never guess who gets billed: fall back to the member marked primary,
+      // and if there is neither, stop and say so.
+      const declaredPayer = rows[0]?.payerMemberId ?? null;
+      const primary = rows.find((r) => r.relationship === 'primary')?.memberId ?? null;
+      const resolved = declaredPayer ?? primary;
+      if (!resolved) {
+        throw new ConflictError('Set a payer for this family before assigning a plan.');
+      }
+      payerMemberId = resolved;
+    } else {
+      coveredMemberIds = [input.memberId!];
+      payerMemberId = input.memberId!;
+    }
+
+    // --- Price -------------------------------------------------------------
+    const tiers = await db
+      .select({
+        sizeFrom: planPriceTiers.sizeFrom,
+        sizeTo: planPriceTiers.sizeTo,
+        priceCents: planPriceTiers.priceCents,
+      })
+      .from(planPriceTiers)
+      .where(eq(planPriceTiers.planId, plan.id));
+
+    const derived = Pricing.priceForSize({
+      pricingModel: plan.pricingModel,
+      basePriceCents: Number(plan.basePriceCents),
+      tiers: tiers.map((t) => ({ ...t, priceCents: Number(t.priceCents) })),
+      size: coveredMemberIds.length,
+    });
+
+    const mayOverride = can(actor.role, 'update', 'plan');
+    const priceCents =
+      mayOverride && input.priceMajorOverride !== undefined
+        ? Money.fromMajor(input.priceMajorOverride)
+        : derived.totalCents;
+
+    // Snapshotted from the gym at enrolment, so a later VAT change cannot
+    // retroactively alter what this subscription was sold at.
+    const [gym] = await db
+      .select({ vatRateBp: gyms.vatRateBp })
+      .from(gyms)
+      .where(eq(gyms.id, gymId))
+      .limit(1);
+
+    const [subscription] = await db
+      .insert(subscriptions)
+      .values({
+        gymId,
+        planId: plan.id,
+        payerMemberId,
+        status: 'active',
+        startsOn: input.startsOn,
+        priceCentsSnapshot: priceCents,
+        vatRateBpSnapshot: gym?.vatRateBp ?? 0,
+        nextInvoiceOn: input.startsOn,
+      })
+      .returning();
+
+    if (!subscription) throw new NotFoundError('Could not create the subscription');
+
+    await db
+      .insert(subscriptionMembers)
+      .values(
+        coveredMemberIds.map((memberId) => ({
+          subscriptionId: subscription.id,
+          memberId,
+          gymId,
+        })),
+      )
+      .onConflictDoNothing();
+
+    revalidatePath('/members');
     revalidatePath('/subscriptions');
     return { id: subscription.id };
   },
@@ -129,11 +275,7 @@ export const createInvoiceAction = defineAction(
     if (!sub) throw new NotFoundError('Subscription not found');
 
     // Get next invoice number (for now, simple sequence)
-    const lastInvoices = await db
-      .select()
-      .from(invoices)
-      .where(eq(invoices.gymId, gymId))
-      .limit(1);
+    const lastInvoices = await db.select().from(invoices).where(eq(invoices.gymId, gymId)).limit(1);
     const lastInvoice = lastInvoices[0];
 
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Number(lastInvoice?.number?.split('-')[2] || 0) + 1).padStart(5, '0')}`;
@@ -186,7 +328,13 @@ export const createInvoiceAction = defineAction(
       .limit(1);
 
     if (payer?.email) {
-      await sendInvoiceEmail(payer.email, payer.firstName, invoice.number, grossAmount, input.dueOn);
+      await sendInvoiceEmail(
+        payer.email,
+        payer.firstName,
+        invoice.number,
+        grossAmount,
+        input.dueOn,
+      );
     }
 
     revalidatePath('/invoices');
@@ -255,7 +403,8 @@ export const holdSubscriptionAction = defineAction(
 
     // This is a simplified implementation. In Phase 5, this would create a hold record
     // and extend the subscription end date by the hold duration
-    const holdDurationDays = new Date(input.holdEndsOn).getTime() - new Date(input.holdStartsOn).getTime();
+    const holdDurationDays =
+      new Date(input.holdEndsOn).getTime() - new Date(input.holdStartsOn).getTime();
     const durationMs = holdDurationDays / (1000 * 60 * 60 * 24);
 
     const [subscription] = await db

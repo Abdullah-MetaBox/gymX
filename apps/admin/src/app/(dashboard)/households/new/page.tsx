@@ -12,10 +12,15 @@ export default async function NewHouseholdPage() {
 
   const membersList = await queryInGym({ action: 'read', subject: 'member' }, (db) =>
     db
-      .select({ id: members.id, firstName: members.firstName, lastName: members.lastName, memberSeq: members.memberSeq })
+      .select({
+        id: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        memberSeq: members.memberSeq,
+      })
       .from(members)
       .where(eq(members.status, 'active'))
-      .orderBy(asc(members.lastName), asc(members.firstName))
+      .orderBy(asc(members.lastName), asc(members.firstName)),
   );
 
   return (

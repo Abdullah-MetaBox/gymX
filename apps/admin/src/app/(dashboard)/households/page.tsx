@@ -2,15 +2,7 @@ import { formatMemberCode, householdMembers, households, members } from '@gymx/d
 import { count, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import {
-  Button,
-  Card,
-  EmptyState,
-  PageHeader,
-  Table,
-  Td,
-  Th,
-} from '../../../components/ui/index';
+import { Button, Card, EmptyState, PageHeader, Table, Td, Th } from '../../../components/ui/index';
 import { queryInGym } from '../../../lib/action';
 import { requirePageAccess } from '../../../lib/session';
 
