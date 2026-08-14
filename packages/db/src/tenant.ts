@@ -93,11 +93,29 @@ export function requireGymId(): string {
   return context.gymId;
 }
 
-async function setLocal(db: TxDatabase, key: string, value: string): Promise<void> {
-  // set_config(key, value, is_local => true) is SET LOCAL with a bind parameter.
-  // SET LOCAL itself takes no parameters, which would mean interpolating a
-  // gym id into SQL text on every request.
-  await db.execute(sql`select set_config(${key}, ${value}, true)`);
+/**
+ * Set every GUC the policies read, in ONE round trip.
+ *
+ * set_config(key, value, is_local => true) is SET LOCAL with a bind parameter.
+ * SET LOCAL itself takes no parameters, which would mean interpolating a gym id
+ * into SQL text on every request.
+ *
+ * These were four separate awaits. Against a database that is not in the same
+ * region as the app that is four network round trips before any real work
+ * begins — measured at roughly 200 ms each, so ~800 ms of pure latency on every
+ * single query. One SELECT evaluates all four in the same trip.
+ */
+async function setContext(
+  db: TxDatabase,
+  values: { gymId: string; userId: string; role: string; isPlatform: string },
+): Promise<void> {
+  await db.execute(
+    sql`select
+          set_config('app.gym_id',      ${values.gymId},      true),
+          set_config('app.user_id',     ${values.userId},     true),
+          set_config('app.user_role',   ${values.role},       true),
+          set_config('app.is_platform', ${values.isPlatform}, true)`,
+  );
 }
 
 export interface TenantContextInput {
@@ -127,10 +145,12 @@ export async function withTenant<T>(
   const { gymId, userId = null, role = null } = input;
 
   return getAppDb().transaction(async (tx) => {
-    await setLocal(tx, 'app.gym_id', gymId);
-    await setLocal(tx, 'app.user_id', userId ?? '');
-    await setLocal(tx, 'app.user_role', role ?? '');
-    await setLocal(tx, 'app.is_platform', '');
+    await setContext(tx, {
+      gymId,
+      userId: userId ?? '',
+      role: role ?? '',
+      isPlatform: '',
+    });
 
     const context: DbContext = {
       kind: 'tenant',
@@ -153,10 +173,7 @@ export async function withTenant<T>(
  */
 export async function withActor<T>(userId: string, fn: (db: TxDatabase) => Promise<T>): Promise<T> {
   return getAppDb().transaction(async (tx) => {
-    await setLocal(tx, 'app.gym_id', '');
-    await setLocal(tx, 'app.user_id', userId);
-    await setLocal(tx, 'app.user_role', '');
-    await setLocal(tx, 'app.is_platform', '');
+    await setContext(tx, { gymId: '', userId, role: '', isPlatform: '' });
 
     const context: DbContext = {
       kind: 'actor',
@@ -182,10 +199,9 @@ export async function withPlatform<T>(
   fn: (db: TxDatabase) => Promise<T>,
 ): Promise<T> {
   return getAppDb().transaction(async (tx) => {
-    await setLocal(tx, 'app.gym_id', '');
-    await setLocal(tx, 'app.user_id', userId);
-    await setLocal(tx, 'app.user_role', 'platform_admin');
-    await setLocal(tx, 'app.is_platform', '');
+    // The flag is deliberately NOT set until membership is confirmed below, so
+    // a caller cannot assert platform access for a user who lacks it.
+    await setContext(tx, { gymId: '', userId, role: 'platform_admin', isPlatform: '' });
 
     const rows = await tx.execute(
       sql`select 1 from platform_admins where user_id = ${userId}::uuid limit 1`,
@@ -194,7 +210,7 @@ export async function withPlatform<T>(
       throw new ForbiddenError('User is not a platform administrator');
     }
 
-    await setLocal(tx, 'app.is_platform', 'on');
+    await tx.execute(sql`select set_config('app.is_platform', 'on', true)`);
 
     const context: DbContext = {
       kind: 'platform',
@@ -217,10 +233,7 @@ export async function withPlatform<T>(
  */
 export async function withAnonymous<T>(fn: (db: TxDatabase) => Promise<T>): Promise<T> {
   return getAppDb().transaction(async (tx) => {
-    await setLocal(tx, 'app.gym_id', '');
-    await setLocal(tx, 'app.user_id', '');
-    await setLocal(tx, 'app.user_role', '');
-    await setLocal(tx, 'app.is_platform', '');
+    await setContext(tx, { gymId: '', userId: '', role: '', isPlatform: '' });
 
     const context: DbContext = {
       kind: 'actor',

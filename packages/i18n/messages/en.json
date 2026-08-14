@@ -32,7 +32,10 @@
     "invalidCredentials": "That email and password do not match an account.",
     "accountDisabled": "This account has been disabled. Contact your gym manager.",
     "noMemberships": "This account is not attached to any gym yet.",
-    "signingIn": "Signing in…"
+    "signingIn": "Signing in…",
+    "point_members": "Members, family memberships and plans on one screen.",
+    "point_access": "Check-in that confirms identity and entitlement at the door.",
+    "point_money": "Every payment reconciled — invoiced, received, outstanding."
   },
   "nav": {
     "dashboard": "Dashboard",
