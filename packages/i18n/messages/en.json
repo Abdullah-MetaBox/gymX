@@ -59,7 +59,14 @@
     "emptyBody": "Members, plans and billing arrive in the next phases. The foundations are in place: tenancy, roles, audit trail and scheduled jobs.",
     "phaseLabel": "Phase 0 — Foundations",
     "activityTitle": "Recent Activity",
-    "noActivity": "No activity yet"
+    "noActivity": "No activity yet",
+    "activeMembers": "Active members",
+    "activeMembersHint": "Enrolled and active",
+    "revenue": "Revenue",
+    "revenueHint": "Paid this month",
+    "overdue": "Overdue",
+    "overdueHint": "Invoices past their due date",
+    "occupancy": "In the gym now"
   },
   "gyms": {
     "title": "Gyms",

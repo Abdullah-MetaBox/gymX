@@ -115,10 +115,18 @@ describe('accountant', () => {
     expect(can('accountant', 'read', 'audit_log')).toBe(true);
   });
 
+  it('can read the family a bill belongs to', () => {
+    // The family is the billing unit: a size-based plan price cannot be checked
+    // without knowing the family's size, and the payer is a household column.
+    expect(can('accountant', 'read', 'household')).toBe(true);
+    expect(can('accountant', 'export', 'household')).toBe(true);
+  });
+
   it('cannot touch members or take payments', () => {
     expect(can('accountant', 'update', 'member')).toBe(false);
     expect(can('accountant', 'create', 'payment')).toBe(false);
     expect(can('accountant', 'create', 'write_off')).toBe(false);
+    expect(can('accountant', 'update', 'household')).toBe(false);
   });
 });
 

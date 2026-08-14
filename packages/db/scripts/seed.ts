@@ -12,7 +12,7 @@
  * wrong for everything else.
  */
 import { hash } from '@node-rs/argon2';
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from '../src/schema/index';
 import { ownerSql } from './_connect';
@@ -67,7 +67,11 @@ async function main() {
       })
       .onConflictDoUpdate({
         target: schema.gyms.slug,
-        set: { name: 'Gym ABC', branding: { primaryColor: '#d946ef', accentColor: '#0f766e' }, updatedAt: new Date() },
+        set: {
+          name: 'Gym ABC',
+          branding: { primaryColor: '#d946ef', accentColor: '#0f766e' },
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
@@ -138,6 +142,7 @@ async function main() {
 
     // --- Gym ABC members & subscriptions (Phase 1 & 3) ---------------------
     await seedGymAbcMembersAndSubscriptions(db, gymAbc.id);
+    await seedGymAbcFamily(db, gymAbc.id);
 
     // --- A couple of audit rows, so the trail is not empty on first look --
     await db.insert(schema.auditLog).values([
@@ -237,9 +242,18 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
       { gymId, planId: lunchPlan.id, sizeFrom: 2, sizeTo: 2, priceCents: 130_000 },
       { gymId, planId: lunchPlan.id, sizeFrom: 3, sizeTo: null, priceCents: 200_000 },
     ]);
-    await db.insert(schema.planAccessRules).values([
-      { gymId, planId: lunchPlan.id, area: 'gym', weekdays: null, startTime: '11:00', endTime: '13:00' },
-    ]);
+    await db
+      .insert(schema.planAccessRules)
+      .values([
+        {
+          gymId,
+          planId: lunchPlan.id,
+          area: 'gym',
+          weekdays: null,
+          startTime: '11:00',
+          endTime: '13:00',
+        },
+      ]);
   }
 
   // Student membership — gym + pool, proof of enrolment required.
@@ -248,7 +262,9 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
     .values({
       gymId,
       nameI18n: { en: 'Student Membership', fr: 'Abonnement étudiant' },
-      descriptionI18n: { en: 'Discounted rate for full-time students. Proof of enrolment required.' },
+      descriptionI18n: {
+        en: 'Discounted rate for full-time students. Proof of enrolment required.',
+      },
       type: 'contract',
       category: 'student',
       billingInterval: 'monthly',
@@ -264,8 +280,22 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
 
   if (studentPlan) {
     await db.insert(schema.planAccessRules).values([
-      { gymId, planId: studentPlan.id, area: 'gym', weekdays: null, startTime: null, endTime: null },
-      { gymId, planId: studentPlan.id, area: 'pool', weekdays: null, startTime: null, endTime: null },
+      {
+        gymId,
+        planId: studentPlan.id,
+        area: 'gym',
+        weekdays: null,
+        startTime: null,
+        endTime: null,
+      },
+      {
+        gymId,
+        planId: studentPlan.id,
+        area: 'pool',
+        weekdays: null,
+        startTime: null,
+        endTime: null,
+      },
     ]);
   }
 
@@ -291,9 +321,11 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
     .returning();
 
   if (dayPass) {
-    await db.insert(schema.planAccessRules).values([
-      { gymId, planId: dayPass.id, area: 'gym', weekdays: null, startTime: null, endTime: null },
-    ]);
+    await db
+      .insert(schema.planAccessRules)
+      .values([
+        { gymId, planId: dayPass.id, area: 'gym', weekdays: null, startTime: null, endTime: null },
+      ]);
   }
 
   // Week pass
@@ -318,9 +350,11 @@ async function seedGymAbcPlans(db: SeedDb, gymId: string) {
     .returning();
 
   if (weekPass) {
-    await db.insert(schema.planAccessRules).values([
-      { gymId, planId: weekPass.id, area: 'gym', weekdays: null, startTime: null, endTime: null },
-    ]);
+    await db
+      .insert(schema.planAccessRules)
+      .values([
+        { gymId, planId: weekPass.id, area: 'gym', weekdays: null, startTime: null, endTime: null },
+      ]);
   }
 
   console.log('  • seeded 5 plans for Gym ABC (Full, Lunch, Student, Day pass, Week pass)');
@@ -416,10 +450,7 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
   }
 
   // Fetch plans for subscriptions
-  const allPlans = await db
-    .select()
-    .from(schema.plans)
-    .where(eq(schema.plans.gymId, gymId));
+  const allPlans = await db.select().from(schema.plans).where(eq(schema.plans.gymId, gymId));
 
   const fullPlan = allPlans.find((p) => p.category === 'full');
   const lunchPlan = allPlans.find((p) => p.category === 'lunch');
@@ -528,6 +559,126 @@ async function seedGymAbcMembersAndSubscriptions(db: SeedDb, gymId: string) {
   }
 
   console.log('  • seeded 4 members and 4 subscriptions for Gym ABC (Full, Lunch, Full, Student)');
+}
+
+/**
+ * A four-person family sharing one subscription.
+ *
+ * Three of the four are on the subscription; Vikram deliberately is not. That
+ * gap is the thing worth demonstrating — a family membership that silently fails
+ * to cover someone is exactly the failure this product exists to catch, and the
+ * members list surfaces it as "3 of 4 covered".
+ *
+ * Guarded on households rather than members so it still runs against a database
+ * that was seeded before this function existed.
+ */
+const FAMILY_NAME = 'The Ramdhani family';
+
+async function seedGymAbcFamily(db: SeedDb, gymId: string) {
+  // Guarded on THIS family by name, not on "any household exists" — the seed
+  // should own only the rows it created and stay out of the way of hand-made
+  // test data.
+  const existing = await db
+    .select({ value: count() })
+    .from(schema.households)
+    .where(and(eq(schema.households.gymId, gymId), eq(schema.households.name, FAMILY_NAME)));
+  if (Number(existing[0]?.value ?? 0) > 0) {
+    console.log(`  • "${FAMILY_NAME}" already seeded, skipping`);
+    return;
+  }
+
+  const allPlans = await db.select().from(schema.plans).where(eq(schema.plans.gymId, gymId));
+
+  const [seqRow] = await db
+    .select({ maxSeq: sql<number>`coalesce(max(${schema.members.memberSeq}), 0)::int` })
+    .from(schema.members)
+    .where(eq(schema.members.gymId, gymId));
+  const baseSeq = seqRow?.maxSeq ?? 0;
+
+  const familyMembers = await Promise.all(
+    [
+      { first: 'Anil', last: 'Ramdhani', dob: '1979-04-02', gender: 'male' as const, seq: 1 },
+      { first: 'Sunita', last: 'Ramdhani', dob: '1982-09-14', gender: 'female' as const, seq: 2 },
+      { first: 'Meera', last: 'Ramdhani', dob: '2009-06-30', gender: 'female' as const, seq: 3 },
+      { first: 'Vikram', last: 'Ramdhani', dob: '2012-12-05', gender: 'male' as const, seq: 4 },
+    ].map(async (m) => {
+      const [row] = await db
+        .insert(schema.members)
+        .values({
+          gymId,
+          memberSeq: baseSeq + m.seq,
+          firstName: m.first,
+          lastName: m.last,
+          email: `${m.first.toLowerCase()}.ramdhani@gymabc.test`,
+          phone: `+230 5757 ${1000 + baseSeq + m.seq}`,
+          dateOfBirth: m.dob,
+          gender: m.gender,
+          locale: 'en',
+          status: 'active',
+          joinedAt: '2024-03-01',
+        })
+        .returning();
+      return row;
+    }),
+  );
+
+  const [anil, sunita, meera, vikram] = familyMembers;
+  if (!anil || !sunita || !meera || !vikram) {
+    console.log('  • failed to seed the Ramdhani family');
+    return;
+  }
+
+  const [household] = await db
+    .insert(schema.households)
+    .values({ gymId, name: FAMILY_NAME, payerMemberId: anil.id })
+    .returning();
+
+  if (!household) {
+    console.log('  • failed to seed the Ramdhani household');
+    return;
+  }
+
+  await db.insert(schema.householdMembers).values([
+    { householdId: household.id, memberId: anil.id, relationship: 'primary' },
+    { householdId: household.id, memberId: sunita.id, relationship: 'spouse' },
+    { householdId: household.id, memberId: meera.id, relationship: 'child' },
+    { householdId: household.id, memberId: vikram.id, relationship: 'child' },
+  ]);
+
+  // Bill the whole family on the Full plan, paid by Anil.
+  const fullPlan = allPlans.find((p) => p.category === 'full');
+  if (fullPlan) {
+    const [familySub] = await db
+      .insert(schema.subscriptions)
+      .values({
+        gymId,
+        planId: fullPlan.id,
+        payerMemberId: anil.id,
+        status: 'active',
+        startsOn: '2024-03-01',
+        minTermEndsOn: '2025-03-01',
+        priceCentsSnapshot: 350000, // Rs 3,500 family rate
+        vatRateBpSnapshot: 1500,
+        nextInvoiceOn: '2024-04-01',
+      })
+      .returning();
+
+    if (familySub) {
+      // Vikram is intentionally absent — see the note above.
+      await db
+        .insert(schema.subscriptionMembers)
+        .values(
+          [anil, sunita, meera].map((m) => ({
+            subscriptionId: familySub.id,
+            memberId: m.id,
+            gymId,
+          })),
+        )
+        .onConflictDoNothing();
+    }
+  }
+
+  console.log('  • seeded the Ramdhani family (4 members, 1 shared subscription, 3 of 4 covered)');
 }
 
 async function seedLocation(

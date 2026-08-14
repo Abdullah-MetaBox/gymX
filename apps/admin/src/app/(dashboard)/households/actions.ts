@@ -106,7 +106,7 @@ export const updateHouseholdAction = defineAction(
   updateSchema,
   {
     permission: { action: 'update', subject: 'household' },
-    audit: { entity: 'household', action: 'update', entityId: (input) => (input as { householdId: string }).householdId },
+    audit: { entity: 'household', action: 'update' },
   },
   async (input, { db }) => {
     const [household] = await db
@@ -133,16 +133,14 @@ export const deleteHouseholdAction = defineAction(
   deleteSchema,
   {
     permission: { action: 'delete', subject: 'household' },
-    audit: { entity: 'household', action: 'delete', entityId: (input) => (input as { householdId: string }).householdId },
+    audit: { entity: 'household', action: 'delete' },
   },
   async (input, { db }) => {
-    // Remove all members from household first
+    // Membership rows go first — the household is the parent.
     await db.delete(householdMembers).where(eq(householdMembers.householdId, input.householdId));
-
-    // Delete the household
     await db.delete(households).where(eq(households.id, input.householdId));
 
     revalidatePath('/households');
-    return { ok: true, data: { id: input.householdId } };
+    return { id: input.householdId };
   },
 );

@@ -1,112 +1,156 @@
+import { Money, Time } from '@gymx/core';
+import { auditLog, invoices, members, visits } from '@gymx/db';
+import { and, desc, eq, gte, isNull, lt, lte, ne, sql } from 'drizzle-orm';
+import { AlertTriangle, Banknote, UserRound } from 'lucide-react';
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { type Activity, ActivityItem } from '../../components/activity-item';
 import { KPICard } from '../../components/kpi-card';
 import { ProgressRing } from '../../components/progress-ring';
-import { ActivityItem, type Activity } from '../../components/activity-item';
 import { Card, CardBody, CardHeader, CardTitle } from '../../components/ui/index';
-import Link from 'next/link';
+import { queryInGym } from '../../lib/action';
 
 interface ManagerDashboardProps {
   gymId: string;
   timeZone: string;
 }
 
-export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProps) {
+/**
+ * Every figure on this screen is read from the database.
+ *
+ * It previously rendered hardcoded numbers (247 members, Rs 98,500 revenue) that
+ * a viewer had no way to tell from real ones. A dashboard that invents its own
+ * figures is worse than no dashboard: it is the "three systems, three truths"
+ * failure this product exists to fix, committed on the summary screen.
+ */
+export async function ManagerDashboard({ timeZone }: ManagerDashboardProps) {
   const t = await getTranslations();
 
-  // Mock data for demo (in real implementation, this would come from database)
-  const stats = {
-    activeMembers: 247,
-    monthlyRevenue: 9850000, // in cents
-    overdueInvoices: 12,
-    occupancyNow: { current: 34, capacity: 50, percent: 68 },
-  };
+  const { activeMembers, revenueCents, overdueCount, occupancy, activities } = await queryInGym(
+    { action: 'read', subject: 'member' },
+    async (db) => {
+      const now = new Date();
 
-  const activities: Activity[] = [
-    {
-      id: '1',
-      type: 'payment_recorded',
-      icon: '💰',
-      title: 'Payment recorded',
-      description: 'Rs 5,000 from Alice Johnson',
-      timestamp: new Date(Date.now() - 300000),
-      timeZone,
+      // Month boundaries in the GYM's zone, not the server's. A payment taken at
+      // 23:30 on the 31st in Mauritius belongs to that month, not the next one.
+      const { year, month } = Time.partsInZone(now, timeZone);
+      const monthStart = Time.wallTimeToInstant(
+        { year, month, day: 1, hour: 0, minute: 0 },
+        timeZone,
+      );
+      const nextMonthStart = Time.wallTimeToInstant(
+        month === 12
+          ? { year: year + 1, month: 1, day: 1, hour: 0, minute: 0 }
+          : { year, month: month + 1, day: 1, hour: 0, minute: 0 },
+        timeZone,
+      );
+      const todayKey = Time.dateKeyInZone(now, timeZone);
+
+      const [activeRow] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(members)
+        .where(eq(members.status, 'active'));
+
+      const [revenueRow] = await db
+        .select({ total: sql<number>`coalesce(sum(${invoices.totalCents}), 0)::bigint` })
+        .from(invoices)
+        .where(
+          and(
+            eq(invoices.status, 'paid'),
+            gte(invoices.createdAt, monthStart),
+            lt(invoices.createdAt, nextMonthStart),
+          ),
+        );
+
+      // Overdue = past its due date and not settled. Reads the real dates rather
+      // than trusting the `overdue` status, which nothing sets yet.
+      const [overdueRow] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(invoices)
+        .where(
+          and(
+            lt(invoices.dueOn, todayKey),
+            ne(invoices.status, 'paid'),
+            ne(invoices.status, 'void'),
+            ne(invoices.status, 'written_off'),
+          ),
+        );
+
+      const [occupancyRow] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(visits)
+        .where(and(isNull(visits.exitedAt), lte(visits.enteredAt, now)));
+
+      const auditRows = await db
+        .select({
+          id: auditLog.id,
+          entity: auditLog.entity,
+          action: auditLog.action,
+          actorEmail: auditLog.actorEmail,
+          at: auditLog.at,
+        })
+        .from(auditLog)
+        .orderBy(desc(auditLog.at))
+        .limit(8);
+
+      return {
+        activeMembers: activeRow?.n ?? 0,
+        revenueCents: Number(revenueRow?.total ?? 0),
+        overdueCount: overdueRow?.n ?? 0,
+        occupancy: occupancyRow?.n ?? 0,
+        activities: auditRows.map<Activity>((row) => ({
+          id: row.id,
+          type: `${row.entity}_${row.action}`,
+          icon: ACTIVITY_ICON[row.entity] ?? '•',
+          title: `${titleCase(row.entity)} ${row.action.replace(/_/g, ' ')}`,
+          description: row.actorEmail ?? t('common.unknown'),
+          timestamp: row.at,
+          timeZone,
+        })),
+      };
     },
-    {
-      id: '2',
-      type: 'member_created',
-      icon: '👤',
-      title: 'New member registered',
-      description: 'manager@gymabc.test added a new member',
-      timestamp: new Date(Date.now() - 900000),
-      timeZone,
-    },
-    {
-      id: '3',
-      type: 'subscription_created',
-      icon: '📋',
-      title: 'New subscription',
-      description: 'Family plan subscription created',
-      timestamp: new Date(Date.now() - 1800000),
-      timeZone,
-    },
-    {
-      id: '4',
-      type: 'access_granted',
-      icon: '✓',
-      title: 'Access granted',
-      description: 'Alice Johnson checked in (Lunch access)',
-      timestamp: new Date(Date.now() - 2700000),
-      timeZone,
-    },
-  ];
+  );
 
   return (
     <div className="space-y-8">
-      {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Active Members"
-          value={stats.activeMembers}
-          subtitle="Enrolled and active"
-          trend={{ value: 8, isPositive: true }}
-          icon="👥"
+          title={t('dashboard.activeMembers')}
+          value={activeMembers}
+          subtitle={t('dashboard.activeMembersHint')}
+          icon={<UserRound size={20} aria-hidden />}
           accentColor="primary"
         />
         <KPICard
-          title="Revenue"
-          value={`Rs ${Math.floor(stats.monthlyRevenue / 100).toLocaleString()}`}
-          subtitle="This month"
-          trend={{ value: 12, isPositive: true }}
-          icon="💰"
+          title={t('dashboard.revenue')}
+          value={Money.format(Money.cents(revenueCents), { currency: 'MUR' })}
+          subtitle={t('dashboard.revenueHint')}
+          icon={<Banknote size={20} aria-hidden />}
           accentColor="success"
         />
         <KPICard
-          title="Overdue"
-          value={stats.overdueInvoices}
-          subtitle="Invoices past due"
-          trend={{ value: 5, isPositive: false }}
-          icon="⚠"
+          title={t('dashboard.overdue')}
+          value={overdueCount}
+          subtitle={t('dashboard.overdueHint')}
+          icon={<AlertTriangle size={20} aria-hidden />}
           accentColor="warning"
         />
-        <div className="rounded-lg border border-[#D1D5DB] dark:border-[#4B5563] bg-white dark:bg-[#2D2D35] p-6 flex items-center justify-center hover:shadow-lg hover:border-[#9CA3AF] dark:hover:border-[#6B7280] transition cursor-pointer">
+        <div className="surface flex items-center justify-center rounded-[var(--radius-card)] border border-[var(--color-border)] p-6">
           <ProgressRing
-            current={stats.occupancyNow.current}
-            max={stats.occupancyNow.capacity}
-            label="Occupancy"
+            current={occupancy}
+            max={OCCUPANCY_CAPACITY}
+            label={t('dashboard.occupancy')}
             size="md"
           />
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <QuickActionButton href="/members/new" label="New Member" icon="➕" />
-        <QuickActionButton href="/payments" label="Record Payment" icon="💳" />
-        <QuickActionButton href="/subscriptions" label="New Subscription" icon="📋" />
-        <QuickActionButton href="/components-demo" label="View Components" icon="🎨" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <QuickAction href="/members/new" label={t('members.create')} />
+        <QuickAction href="/members" label={t('nav.members')} />
+        <QuickAction href="/plans" label={t('nav.plans')} />
       </div>
 
-      {/* Recent Activity */}
       <Card>
         <CardHeader>
           <CardTitle>{t('dashboard.activityTitle')}</CardTitle>
@@ -119,7 +163,7 @@ export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProp
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted">{t('dashboard.noActivity')}</p>
+            <p className="text-muted text-sm">{t('dashboard.noActivity')}</p>
           )}
         </CardBody>
       </Card>
@@ -127,22 +171,33 @@ export async function ManagerDashboard({ gymId, timeZone }: ManagerDashboardProp
   );
 }
 
-function QuickActionButton({
-  href,
-  label,
-  icon,
-}: {
-  href: string;
-  label: string;
-  icon: string;
-}) {
+/**
+ * Placeholder until locations carry a real capacity column. The numerator is
+ * real; only the ceiling is assumed.
+ */
+const OCCUPANCY_CAPACITY = 50;
+
+const ACTIVITY_ICON: Record<string, string> = {
+  member: '👤',
+  household: '👪',
+  subscription: '📋',
+  invoice: '🧾',
+  payment: '💳',
+  plan: '📝',
+  gym: '🏋',
+};
+
+function titleCase(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, ' ');
+}
+
+function QuickAction({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="rounded-lg border border-[#D1D5DB] dark:border-[#4B5563] bg-white dark:bg-[#2D2D35] p-4 text-center hover:shadow-lg hover:border-[#9CA3AF] dark:hover:border-[#6B7280] hover:bg-[#F9FAFB] dark:hover:bg-[#3F3F47] transition flex items-center justify-center gap-2 text-sm font-medium text-[#0B0B0F] dark:text-[#E5E7EB] cursor-pointer"
+      className="surface hover:surface-2 flex items-center justify-center rounded-[var(--radius-card)] border border-[var(--color-border)] p-4 text-center text-sm font-medium transition"
     >
-      <span>{icon}</span>
-      <span>{label}</span>
+      {label}
     </Link>
   );
 }

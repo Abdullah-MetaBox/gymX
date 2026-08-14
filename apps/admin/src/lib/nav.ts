@@ -30,28 +30,16 @@ export interface NavEntry {
 const CORE_NAV: NavEntry[] = [
   { id: 'dashboard', href: '/', labelKey: 'dashboard', icon: 'LayoutDashboard', order: 10 },
   {
+    // Members, family memberships and subscriptions are ONE screen. 90%+ of
+    // members hold a 1:1 subscription, so three sidebar entries were three views
+    // of the same rows. /households/* and /subscriptions/* still resolve when
+    // typed or linked from a member — they are unlisted, not deleted.
     id: 'members',
     href: '/members',
     labelKey: 'members',
     icon: 'UserRound',
     requires: { action: 'read', subject: 'member' },
     order: 20,
-  },
-  {
-    id: 'households',
-    href: '/households',
-    labelKey: 'households',
-    icon: 'Home',
-    requires: { action: 'read', subject: 'household' },
-    order: 25,
-  },
-  {
-    id: 'guestPasses',
-    href: '/guest-passes',
-    labelKey: 'guestPasses',
-    icon: 'Ticket',
-    requires: { action: 'read', subject: 'guest_pass' },
-    order: 30,
   },
   {
     id: 'plans',
@@ -61,79 +49,25 @@ const CORE_NAV: NavEntry[] = [
     requires: { action: 'read', subject: 'plan' },
     order: 40,
   },
-  {
-    id: 'subscriptions',
-    href: '/subscriptions',
-    labelKey: 'subscriptions',
-    icon: 'CreditCard',
-    requires: { action: 'read', subject: 'subscription' },
-    order: 50,
-  },
-  {
-    id: 'invoices',
-    href: '/invoices',
-    labelKey: 'invoices',
-    icon: 'FileText',
-    requires: { action: 'read', subject: 'invoice' },
-    order: 55,
-  },
-  {
-    id: 'payments',
-    href: '/payments',
-    labelKey: 'payments',
-    icon: 'Wallet',
-    requires: { action: 'read', subject: 'payment' },
-    order: 60,
-  },
-  {
-    id: 'tillShifts',
-    href: '/till-shifts',
-    labelKey: 'tillShifts',
-    icon: 'ReceiptCents',
-    requires: { action: 'read', subject: 'till_shift' },
-    order: 65,
-  },
-  {
-    id: 'access',
-    href: '/access',
-    labelKey: 'access',
-    icon: 'DoorOpen',
-    requires: { action: 'read', subject: 'access_event' },
-    order: 67,
-  },
-  {
-    id: 'team',
-    href: '/team',
-    labelKey: 'team',
-    icon: 'Users',
-    requires: { action: 'read', subject: 'user' },
-    order: 75,
-  },
-  {
-    id: 'auditLog',
-    href: '/audit',
-    labelKey: 'auditLog',
-    icon: 'ScrollText',
-    requires: { action: 'read', subject: 'audit_log' },
-    order: 85,
-  },
-  {
-    id: 'settings',
-    href: '/settings',
-    labelKey: 'settings',
-    icon: 'Settings',
-    requires: { action: 'update', subject: 'gym' },
-    order: 95,
-  },
-  {
-    id: 'gyms',
-    href: '/platform/gyms',
-    labelKey: 'gyms',
-    icon: 'Building2',
-    platformOnly: true,
-    order: 105,
-  },
 ];
+
+/**
+ * Screens that exist but do not yet work, kept here so nobody has to re-derive
+ * the list. Restore an entry the day its screen does something real — see the
+ * file header: a sidebar full of dead links teaches staff to ignore the sidebar.
+ *
+ *   households    /households      restore if the merged Members screen ever splits
+ *   guestPasses   /guest-passes    read: guest_pass
+ *   subscriptions /subscriptions   restore when the list adds value over Members
+ *   invoices      /invoices        read: invoice
+ *   payments      /payments        read: payment
+ *   tillShifts    /till-shifts     read: till_shift
+ *   access        /access          read: access_event — currently a "Coming soon" stub
+ *   team          /team            read: user
+ *   auditLog      /audit           read: audit_log
+ *   settings      /settings        update: gym
+ *   gyms          /platform/gyms   platformOnly
+ */
 
 export interface NavContext {
   role: Role;

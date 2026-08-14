@@ -1,7 +1,6 @@
 'use server';
 
-import { can } from '@gymx/core/auth';
-import { NotFoundError } from '@gymx/core/errors';
+import { ConflictError, NotFoundError } from '@gymx/core/errors';
 import { formatMemberCode, members, subscriptions, subscriptionMembers, plans } from '@gymx/db';
 import { sql } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
@@ -123,14 +122,10 @@ export const updateMemberAction = defineAction(
       entityId: (result) => (result as { id: string }).id,
     },
   },
-  async (input, { db, actor }) => {
-    const canEditNfc = can(actor.role, 'update', 'member');
-    const base = toRow(input);
-    const updateData = canEditNfc ? base : { ...base, nfcUid: undefined };
-
+  async (input, { db }) => {
     const [member] = await db
       .update(members)
-      .set(updateData)
+      .set(toRow(input))
       .where(eq(members.id, input.memberId))
       .returning();
 
@@ -165,25 +160,31 @@ export const deleteMemberAction = defineAction(
   deleteSchema,
   {
     permission: { action: 'delete', subject: 'member' },
-    audit: { entity: 'member', action: 'delete', entityId: (input) => (input as { memberId: string }).memberId },
+    audit: { entity: 'member', action: 'delete' },
   },
   async (input, { db }) => {
-    // Check if member has any active subscriptions
-    const activeSubscriptionCount = await db
+    // A member covered by any subscription cannot be deleted — the subscription
+    // and its invoices would be left pointing at a hole. Archive instead.
+    const subscriptionCount = await db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(subscriptions)
       .innerJoin(subscriptionMembers, eq(subscriptionMembers.subscriptionId, subscriptions.id))
       .where(eq(subscriptionMembers.memberId, input.memberId))
       .then((r) => r[0]?.count ?? 0);
 
-    if (activeSubscriptionCount > 0) {
-      return { ok: false, error: 'Cannot delete member with active subscriptions', code: 'MEMBER_HAS_SUBSCRIPTIONS' };
+    // Thrown, not returned: defineAction wraps a returned value as the action's
+    // `data`, so a returned {ok:false} becomes {ok:true, data:{ok:false}} and the
+    // caller reads it as success.
+    if (subscriptionCount > 0) {
+      throw new ConflictError(
+        'Cannot delete a member who is covered by a subscription. Archive them instead.',
+      );
     }
 
     await db.delete(members).where(eq(members.id, input.memberId));
 
     revalidatePath('/members');
-    return { ok: true, data: { id: input.memberId } };
+    return { id: input.memberId };
   },
 );
 
@@ -193,12 +194,12 @@ export const archiveMemberAction = defineAction(
   archiveSchema,
   {
     permission: { action: 'update', subject: 'member' },
-    audit: { entity: 'member', action: 'archive', entityId: (input) => (input as { memberId: string }).memberId },
+    audit: { entity: 'member', action: 'archive' },
   },
   async (input, { db }) => {
     const [member] = await db
       .update(members)
-      .set({ status: 'inactive' })
+      .set({ status: 'inactive', updatedAt: new Date() })
       .where(eq(members.id, input.memberId))
       .returning();
 
@@ -206,6 +207,6 @@ export const archiveMemberAction = defineAction(
 
     revalidatePath('/members');
     revalidatePath(`/members/${input.memberId}`);
-    return { ok: true, data: { id: member.id } };
+    return { id: member.id };
   },
 );

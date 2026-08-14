@@ -21,8 +21,8 @@ const config: NextConfig = {
     '@gymx/storage',
   ],
   serverExternalPackages: ['@node-rs/argon2', 'postgres'],
-  // Performance optimizations
-  swcMinify: true,
+  // Performance optimizations. Note: no `swcMinify` -- it is not a valid key in
+  // Next 15 (SWC minification is always on) and setting it warns on every build.
   compress: true,
   productionBrowserSourceMaps: false,
   poweredByHeader: false,

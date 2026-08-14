@@ -165,6 +165,10 @@ const GRANTS: Record<Role, readonly Grant[]> = {
   accountant: [
     'gym:read',
     ...READ_AND_EXPORT('member'),
+    // The family is the billing unit — households.payer_member_id is who the
+    // invoice goes to, and a size-based plan price is meaningless without the
+    // family's size. An accountant without this sees a partial truth.
+    ...READ_AND_EXPORT('household'),
     ...READ_AND_EXPORT('subscription'),
     ...READ_AND_EXPORT('invoice'),
     ...READ_AND_EXPORT('payment'),

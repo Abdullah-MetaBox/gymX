@@ -1,7 +1,7 @@
 'use server';
 
-// Money helpers for conversions
-import { NotFoundError } from '@gymx/core/errors';
+import { Money } from '@gymx/core';
+import { ConflictError, NotFoundError } from '@gymx/core/errors';
 import { invoiceLines, invoices, subscriptionMembers, subscriptions, members } from '@gymx/db';
 import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
@@ -30,7 +30,7 @@ function toSubscriptionRow(
     startsOn: input.startsOn,
     endsOn: null,
     minTermEndsOn: null,
-    priceCentsSnapshot: Math.round(input.priceMajor * 100),
+    priceCentsSnapshot: Money.fromMajor(input.priceMajor),
     vatRateBpSnapshot: vatRateBp,
     nextInvoiceOn: input.startsOn,
     cancelledAt: null,
@@ -78,7 +78,6 @@ export const cancelSubscriptionAction = defineAction(
     audit: {
       entity: 'subscription',
       action: 'cancel',
-      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
     },
   },
   async (input, { db, actor }) => {
@@ -208,18 +207,16 @@ export const updateSubscriptionAction = defineAction(
   updateSubscriptionSchema,
   {
     permission: { action: 'update', subject: 'subscription' },
-    audit: {
-      entity: 'subscription',
-      action: 'update',
-      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
-    },
+    audit: { entity: 'subscription', action: 'update' },
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const updateData: Record<string, any> = { updatedAt: new Date() };
+    const updateData: Partial<typeof subscriptions.$inferInsert> = { updatedAt: new Date() };
 
     if (input.payerMemberId) updateData.payerMemberId = input.payerMemberId;
-    if (input.priceMajor !== undefined) updateData.priceCentsSnapshot = Math.round(input.priceMajor * 100);
+    if (input.priceMajor !== undefined) {
+      updateData.priceCentsSnapshot = Money.fromMajor(input.priceMajor);
+    }
     if (input.endsOn) updateData.endsOn = input.endsOn;
 
     const [subscription] = await db
@@ -251,7 +248,6 @@ export const holdSubscriptionAction = defineAction(
     audit: {
       entity: 'subscription',
       action: 'hold',
-      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
     },
   },
   async (input, { db, actor }) => {
@@ -289,7 +285,6 @@ export const resumeSubscriptionAction = defineAction(
     audit: {
       entity: 'subscription',
       action: 'resume',
-      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
     },
   },
   async (input, { db, actor }) => {
@@ -316,33 +311,31 @@ export const deleteSubscriptionAction = defineAction(
   deleteSubscriptionSchema,
   {
     permission: { action: 'delete', subject: 'subscription' },
-    audit: {
-      entity: 'subscription',
-      action: 'delete',
-      entityId: (input) => (input as { subscriptionId: string }).subscriptionId,
-    },
+    audit: { entity: 'subscription', action: 'delete' },
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
 
-    // Check if subscription has any invoices
     const invoiceCount = await db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(invoices)
       .where(and(eq(invoices.subscriptionId, input.subscriptionId), eq(invoices.gymId, gymId)))
       .then((r) => r[0]?.count ?? 0);
 
+    // Thrown, not returned — see deleteMemberAction. An invoiced subscription is
+    // money already owed; deleting it would orphan the invoice.
     if (invoiceCount > 0) {
-      return { ok: false, error: 'Cannot delete subscription with invoices', code: 'SUBSCRIPTION_HAS_INVOICES' };
+      throw new ConflictError(
+        'Cannot delete a subscription that has been invoiced. Cancel it instead.',
+      );
     }
 
-    // Remove subscription members
-    await db.delete(subscriptionMembers).where(eq(subscriptionMembers.subscriptionId, input.subscriptionId));
-
-    // Delete subscription
+    await db
+      .delete(subscriptionMembers)
+      .where(eq(subscriptionMembers.subscriptionId, input.subscriptionId));
     await db.delete(subscriptions).where(eq(subscriptions.id, input.subscriptionId));
 
     revalidatePath('/subscriptions');
-    return { ok: true, data: { id: input.subscriptionId } };
+    return { id: input.subscriptionId };
   },
 );
