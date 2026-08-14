@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
+  Avatar,
   Badge,
   Button,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
-  EmptyState,
   PageHeader,
   Table,
   Td,
@@ -39,7 +39,12 @@ export default async function MemberProfilePage({
 
   const [member, docs] = await Promise.all([
     queryInGym({ action: 'read', subject: 'member' }, (db) =>
-      db.select().from(members).where(eq(members.id, memberId)).limit(1).then((r) => r[0]),
+      db
+        .select()
+        .from(members)
+        .where(eq(members.id, memberId))
+        .limit(1)
+        .then((r) => r[0]),
     ),
     queryInGym({ action: 'read', subject: 'document' }, (db) =>
       db
@@ -71,7 +76,10 @@ export default async function MemberProfilePage({
                 <Link href={`/members/${memberId}/edit`}>
                   <Button size="sm">{t('common.edit')}</Button>
                 </Link>
-                <MemberActions memberId={memberId} memberName={`${member.firstName} ${member.lastName}`} />
+                <MemberActions
+                  memberId={memberId}
+                  memberName={`${member.firstName} ${member.lastName}`}
+                />
               </>
             )}
           </div>
@@ -91,6 +99,21 @@ export default async function MemberProfilePage({
               </div>
             </CardHeader>
             <CardBody className="space-y-3 text-sm">
+              <div className="flex flex-col items-center gap-2 pb-2">
+                <Avatar
+                  src={member.photoUrl}
+                  name={`${member.firstName} ${member.lastName}`}
+                  size="lg"
+                />
+                {!member.photoUrl && canEdit ? (
+                  <Link
+                    href={`/members/${memberId}/edit`}
+                    className="text-[var(--color-primary)] text-xs hover:underline"
+                  >
+                    {t('members.addPhoto')}
+                  </Link>
+                ) : null}
+              </div>
               <Row label={t('members.email')} value={member.email} />
               <Row label={t('members.phone')} value={member.phone} />
               <Row label={t('members.dateOfBirth')} value={member.dateOfBirth} />

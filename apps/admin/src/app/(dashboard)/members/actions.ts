@@ -1,9 +1,9 @@
 'use server';
 
-import { ConflictError, NotFoundError } from '@gymx/core/errors';
-import { formatMemberCode, members, subscriptions, subscriptionMembers, plans } from '@gymx/db';
-import { sql } from 'drizzle-orm';
-import { eq } from 'drizzle-orm';
+import { ConflictError, NotFoundError, ValidationError } from '@gymx/core/errors';
+import { formatMemberCode, members, plans, subscriptionMembers, subscriptions } from '@gymx/db';
+import { getStorage } from '@gymx/storage';
+import { eq, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -14,7 +14,11 @@ const memberSchema = z.object({
   lastName: z.string().min(1).max(100),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().max(30).optional().or(z.literal('')),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal('')),
   gender: z.enum(['male', 'female']).optional().or(z.literal('')),
   nic: z.string().max(20).optional().or(z.literal('')),
   address: z.string().max(500).optional().or(z.literal('')),
@@ -73,11 +77,7 @@ export const createMemberAction = defineAction(
 
     // If a plan was selected, create a subscription
     if (input.planId) {
-      const [plan] = await db
-        .select()
-        .from(plans)
-        .where(eq(plans.id, input.planId))
-        .limit(1);
+      const [plan] = await db.select().from(plans).where(eq(plans.id, input.planId)).limit(1);
 
       if (plan) {
         const today = input.joinedAt;
@@ -187,6 +187,94 @@ export const deleteMemberAction = defineAction(
     return { id: input.memberId };
   },
 );
+
+const setPhotoSchema = z.object({
+  memberId: z.string().uuid(),
+  photoKey: z.string().min(1).max(512),
+  photoUrl: z.string().url().max(1024),
+});
+
+export const setMemberPhotoAction = defineAction(
+  setPhotoSchema,
+  {
+    permission: { action: 'update', subject: 'member' },
+    audit: { entity: 'member', action: 'photo_set' },
+  },
+  async (input, { db, actor }) => {
+    // Both values come back from our own upload route, but they arrive over the
+    // wire like any other action input. Without these two checks a signed-in
+    // user could point a member's photo at an arbitrary external URL — a
+    // tracking pixel that fires for every colleague who opens the list.
+    if (!input.photoKey.startsWith(`gyms/${actor.gymId}/`)) {
+      throw new ValidationError('That photo does not belong to this gym.', {
+        photoKey: ['Unexpected storage key'],
+      });
+    }
+    if (!isBlobUrl(input.photoUrl)) {
+      throw new ValidationError('That photo URL is not a storage URL.', {
+        photoUrl: ['Unexpected host'],
+      });
+    }
+
+    const [member] = await db
+      .update(members)
+      .set({ photoKey: input.photoKey, photoUrl: input.photoUrl, updatedAt: new Date() })
+      .where(eq(members.id, input.memberId))
+      .returning();
+
+    if (!member) throw new NotFoundError('Member not found');
+
+    revalidatePath('/members');
+    revalidatePath(`/members/${input.memberId}`);
+    return { id: member.id };
+  },
+);
+
+export const deleteMemberPhotoAction = defineAction(
+  z.object({ memberId: z.string().uuid() }),
+  {
+    permission: { action: 'update', subject: 'member' },
+    audit: { entity: 'member', action: 'photo_deleted' },
+  },
+  async (input, { db }) => {
+    const [existing] = await db
+      .select({ photoKey: members.photoKey })
+      .from(members)
+      .where(eq(members.id, input.memberId))
+      .limit(1);
+
+    if (!existing) throw new NotFoundError('Member not found');
+
+    // Clear the reference first: a member whose photo failed to delete from
+    // storage is recoverable, a row still pointing at a deleted blob renders a
+    // broken image to the front desk.
+    await db
+      .update(members)
+      .set({ photoKey: null, photoUrl: null, updatedAt: new Date() })
+      .where(eq(members.id, input.memberId));
+
+    if (existing.photoKey) {
+      try {
+        await getStorage().delete(existing.photoKey);
+      } catch (error) {
+        console.error('[members] photo row cleared but blob delete failed', error);
+      }
+    }
+
+    revalidatePath('/members');
+    revalidatePath(`/members/${input.memberId}`);
+    return { id: input.memberId };
+  },
+);
+
+function isBlobUrl(value: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(value);
+    return protocol === 'https:' && hostname.endsWith('.public.blob.vercel-storage.com');
+  } catch {
+    return false;
+  }
+}
 
 const archiveSchema = z.object({ memberId: z.string().uuid() });
 

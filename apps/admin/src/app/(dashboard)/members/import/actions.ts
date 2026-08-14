@@ -1,15 +1,10 @@
 'use server';
 
 import { NotFoundError } from '@gymx/core/errors';
-import {
-  formatMemberCode,
-  importJobs,
-  importRows,
-  members,
-} from '@gymx/db';
-import Papa from 'papaparse';
-import { sql, eq } from 'drizzle-orm';
+import { formatMemberCode, importJobs, importRows, members } from '@gymx/db';
+import { eq, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import Papa from 'papaparse';
 import { z } from 'zod';
 import { defineAction } from '../../../../lib/action';
 
@@ -71,12 +66,7 @@ export const importMembersAction = defineAction(
     // Collect emails already in the gym so we can detect duplicates without
     // a per-row query — the whole import runs in one transaction.
     const existingEmails = new Set(
-      (
-        await db
-          .select({ email: members.email })
-          .from(members)
-          .where(eq(members.gymId, gymId))
-      )
+      (await db.select({ email: members.email }).from(members).where(eq(members.gymId, gymId)))
         .map((r) => r.email?.toLowerCase())
         .filter(Boolean),
     );

@@ -1,10 +1,29 @@
 'use client';
 
-import Papa from 'papaparse';
 import { useTranslations } from 'next-intl';
+import Papa from 'papaparse';
 import { useRef, useState } from 'react';
-import { Alert, Badge, Button, Card, CardBody, CardHeader, CardTitle, Field, PageHeader, Select, Table, Td, Th } from '../../../../components/ui/index';
-import { IMPORT_FIELDS, type ImportField, type ImportRowResult, importMembersAction } from './actions';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  Field,
+  PageHeader,
+  Select,
+  Table,
+  Td,
+  Th,
+} from '../../../../components/ui/index';
+import {
+  IMPORT_FIELDS,
+  type ImportField,
+  type ImportRowResult,
+  importMembersAction,
+} from './actions';
 
 const REQUIRED_FIELDS: ImportField[] = ['firstName', 'lastName'];
 
@@ -67,9 +86,16 @@ export default function ImportMembersPage() {
     setBusy(true);
     try {
       const res = await importMembersAction({ csvText, mapping, dryRun: true });
-      if (!res.ok) { setError(res.error); return; }
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
       setResults(res.data.results.slice(0, 50));
-      setSummary({ ok: res.data.okCount, errors: res.data.errorCount, duplicates: res.data.duplicateCount });
+      setSummary({
+        ok: res.data.okCount,
+        errors: res.data.errorCount,
+        duplicates: res.data.duplicateCount,
+      });
       setStep('preview');
     } finally {
       setBusy(false);
@@ -80,15 +106,27 @@ export default function ImportMembersPage() {
     setBusy(true);
     try {
       const res = await importMembersAction({ csvText, mapping, dryRun: false });
-      if (!res.ok) { setError(res.error); return; }
-      setSummary({ ok: res.data.okCount, errors: res.data.errorCount, duplicates: res.data.duplicateCount });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setSummary({
+        ok: res.data.okCount,
+        errors: res.data.errorCount,
+        duplicates: res.data.duplicateCount,
+      });
       setStep('done');
     } finally {
       setBusy(false);
     }
   }
 
-  const STATUS_TONE = { ok: 'success', error: 'danger', duplicate: 'warning', skipped: 'neutral' } as const;
+  const STATUS_TONE = {
+    ok: 'success',
+    error: 'danger',
+    duplicate: 'warning',
+    skipped: 'neutral',
+  } as const;
 
   return (
     <>
@@ -99,7 +137,8 @@ export default function ImportMembersPage() {
         <Card className="max-w-lg">
           <CardBody className="space-y-4">
             <p className="text-sm text-muted">
-              Export your members from Google Sheets as CSV (File → Download → CSV). The first row must be column headers.
+              Export your members from Google Sheets as CSV (File → Download → CSV). The first row
+              must be column headers.
             </p>
             <input
               ref={fileRef}
@@ -158,20 +197,26 @@ export default function ImportMembersPage() {
           {previewRows.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('import.preview')} (first {previewRows.length} rows)</CardTitle>
+                <CardTitle>
+                  {t('import.preview')} (first {previewRows.length} rows)
+                </CardTitle>
               </CardHeader>
               <div className="overflow-x-auto">
                 <Table>
                   <thead>
                     <tr>
-                      {headers.slice(0, 6).map((h) => <Th key={h}>{h}</Th>)}
+                      {headers.slice(0, 6).map((h) => (
+                        <Th key={h}>{h}</Th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {previewRows.map((row, i) => (
                       <tr key={i}>
                         {headers.slice(0, 6).map((h) => (
-                          <Td key={h} className="text-muted max-w-[120px] truncate">{row[h] ?? ''}</Td>
+                          <Td key={h} className="text-muted max-w-[120px] truncate">
+                            {row[h] ?? ''}
+                          </Td>
                         ))}
                       </tr>
                     ))}
@@ -216,19 +261,20 @@ export default function ImportMembersPage() {
                     <Td className="text-muted font-mono text-xs">{r.rowNo}</Td>
                     <Td>
                       <Badge tone={STATUS_TONE[r.status]}>
-                        {r.status === 'ok' ? t('import.rowOk')
-                          : r.status === 'error' ? t('import.rowError')
-                          : r.status === 'duplicate' ? t('import.rowDuplicate')
-                          : t('import.rowSkipped')}
+                        {r.status === 'ok'
+                          ? t('import.rowOk')
+                          : r.status === 'error'
+                            ? t('import.rowError')
+                            : r.status === 'duplicate'
+                              ? t('import.rowDuplicate')
+                              : t('import.rowSkipped')}
                       </Badge>
                     </Td>
                     <Td>
                       {`${r.raw[mapping.firstName ?? ''] ?? ''} ${r.raw[mapping.lastName ?? ''] ?? ''}`.trim()}
                       {r.status === 'ok' && r.memberCode && ` → ${r.memberCode}`}
                     </Td>
-                    <Td className="text-muted text-xs">
-                      {r.errors.join('; ') || '—'}
-                    </Td>
+                    <Td className="text-muted text-xs">{r.errors.join('; ') || '—'}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -237,7 +283,9 @@ export default function ImportMembersPage() {
 
           <div className="flex gap-3">
             <Button onClick={handleImport} disabled={busy || summary.ok === 0}>
-              {busy ? t('import.importing') : `${t('import.importBtn').replace('{count}', String(summary.ok))}`}
+              {busy
+                ? t('import.importing')
+                : `${t('import.importBtn').replace('{count}', String(summary.ok))}`}
             </Button>
             <Button variant="secondary" onClick={() => setStep('map')}>
               {t('common.back')}
@@ -250,13 +298,21 @@ export default function ImportMembersPage() {
       {step === 'done' && (
         <div className="max-w-lg space-y-4">
           <Alert tone="info">
-            {t('import.done')} — {summary.ok} imported, {summary.errors} errors, {summary.duplicates} duplicates.
+            {t('import.done')} — {summary.ok} imported, {summary.errors} errors,{' '}
+            {summary.duplicates} duplicates.
           </Alert>
           <div className="flex gap-3">
             <a href="/members">
               <Button>View members</Button>
             </a>
-            <Button variant="secondary" onClick={() => { setStep('upload'); setCsvText(''); setMapping({}); }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setStep('upload');
+                setCsvText('');
+                setMapping({});
+              }}
+            >
               Import another file
             </Button>
           </div>

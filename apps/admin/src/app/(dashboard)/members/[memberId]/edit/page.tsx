@@ -4,7 +4,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { MemberForm } from '../../../../../components/member-form';
-import { Button, PageHeader } from '../../../../../components/ui/index';
+import { MemberPhotoField } from '../../../../../components/member-photo-field';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+} from '../../../../../components/ui/index';
 import { queryInGym } from '../../../../../lib/action';
 import { requirePageAccess } from '../../../../../lib/session';
 import { updateMemberAndRedirect } from '../../actions';
@@ -19,7 +27,12 @@ export default async function EditMemberPage({
   const context = await requirePageAccess('update', 'member');
 
   const member = await queryInGym({ action: 'read', subject: 'member' }, (db) =>
-    db.select().from(members).where(eq(members.id, memberId)).limit(1).then((r) => r[0]),
+    db
+      .select()
+      .from(members)
+      .where(eq(members.id, memberId))
+      .limit(1)
+      .then((r) => r[0]),
   );
 
   if (!member) notFound();
@@ -55,6 +68,19 @@ export default async function EditMemberPage({
           </Link>
         }
       />
+      <Card className="mb-5">
+        <CardHeader>
+          <CardTitle>{t('members.photo')}</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <MemberPhotoField
+            memberId={memberId}
+            memberName={`${member.firstName} ${member.lastName}`}
+            photoUrl={member.photoUrl}
+          />
+        </CardBody>
+      </Card>
+
       <MemberForm
         action={updateMemberAndRedirect}
         defaultValues={defaults}

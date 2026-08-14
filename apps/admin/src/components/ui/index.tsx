@@ -170,6 +170,73 @@ export function Badge({
   );
 }
 
+// --- Avatar ---------------------------------------------------------------
+
+const AVATAR_SIZES = {
+  sm: { box: 'h-8 w-8 text-[10px]', px: 32 },
+  md: { box: 'h-10 w-10 text-xs', px: 40 },
+  lg: { box: 'h-24 w-24 text-2xl', px: 96 },
+} as const;
+
+/**
+ * A member's photo, or their initials when there is none.
+ *
+ * A plain <img>, not next/image: there is no images config in next.config.ts,
+ * and the optimizer bills per source image — pointless for a 40px avatar in a
+ * list of hundreds. Explicit width/height still prevents the layout shift that
+ * is next/image's real benefit here.
+ */
+export function Avatar({
+  src,
+  name,
+  size = 'md',
+  className,
+}: {
+  src?: string | null;
+  name: string;
+  size?: keyof typeof AVATAR_SIZES;
+  className?: string;
+}) {
+  const { box, px } = AVATAR_SIZES[size];
+  const shared = cn(
+    'shrink-0 overflow-hidden rounded-full border border-[var(--color-border)]',
+    box,
+    className,
+  );
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        width={px}
+        height={px}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        className={cn(shared, 'object-cover')}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={cn(shared, 'surface-2 text-muted flex items-center justify-center font-medium')}
+      aria-hidden
+    >
+      {initialsOf(name)}
+    </span>
+  );
+}
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+  return (first + last).toUpperCase();
+}
+
 // --- Table ----------------------------------------------------------------
 
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {

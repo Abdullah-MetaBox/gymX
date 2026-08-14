@@ -50,6 +50,13 @@
       "when": 1786441431950,
       "tag": "0006_brief_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786694334201,
+      "tag": "0007_sharp_pepper_potts",
+      "breakpoints": true
     }
   ]
 }

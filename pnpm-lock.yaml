@@ -47,6 +47,9 @@ importers:
       '@gymx/modules':
         specifier: workspace:*
         version: link:../../packages/modules
+      '@gymx/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@node-rs/argon2':
         specifier: ^2.0.2
         version: 2.0.2

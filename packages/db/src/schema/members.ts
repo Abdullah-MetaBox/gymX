@@ -100,7 +100,15 @@ export const members = pgTable(
     address: text('address'),
     emergencyContactName: text('emergency_contact_name'),
     emergencyContactPhone: text('emergency_contact_phone'),
+    /**
+     * Two columns, on purpose. `photo_key` is what deletes the object (a data
+     * erasure request has to remove the blob, not just the reference);
+     * `photo_url` is what renders. They are different values — the storage
+     * adapter appends a random suffix, so the key you upload with is not the
+     * key you get back.
+     */
     photoKey: text('photo_key'),
+    photoUrl: text('photo_url'),
     nfcUid: text('nfc_uid'),
     locale: text('locale').notNull().default('en'),
     status: memberStatusEnum('status').notNull().default('active'),

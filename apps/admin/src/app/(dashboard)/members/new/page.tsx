@@ -1,25 +1,20 @@
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
-import { eq } from 'drizzle-orm';
 import { plans } from '@gymx/db';
+import { eq } from 'drizzle-orm';
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { MemberForm } from '../../../../components/member-form';
 import { Button, PageHeader } from '../../../../components/ui/index';
+import { queryInGym } from '../../../../lib/action';
 import { requirePageAccess } from '../../../../lib/session';
 import { createMemberAndRedirect } from '../actions';
-import { queryInGym } from '../../../../lib/action';
 
 export default async function NewMemberPage() {
   const t = await getTranslations();
   const context = await requirePageAccess('create', 'member');
 
   // Fetch plans for this gym
-  const gymPlans = await queryInGym(
-    { action: 'read', subject: 'plan' },
-    (db) =>
-      db
-        .select()
-        .from(plans)
-        .orderBy(plans.sortOrder)
+  const gymPlans = await queryInGym({ action: 'read', subject: 'plan' }, (db) =>
+    db.select().from(plans).orderBy(plans.sortOrder),
   );
 
   return (

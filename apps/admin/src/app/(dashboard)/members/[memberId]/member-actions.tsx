@@ -1,8 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { archiveMemberAction, deleteMemberAction } from '../actions';
 
 export function MemberActions({ memberId, memberName }: { memberId: string; memberName: string }) {
@@ -11,27 +11,21 @@ export function MemberActions({ memberId, memberName }: { memberId: string; memb
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [archiveState, archiveAction, archivePending] = useActionState(
-    async () => {
-      const result = await archiveMemberAction({ memberId });
-      if (result.ok) {
-        router.push('/members');
-      }
-      return result;
-    },
-    null,
-  );
+  const [archiveState, archiveAction, archivePending] = useActionState(async () => {
+    const result = await archiveMemberAction({ memberId });
+    if (result.ok) {
+      router.push('/members');
+    }
+    return result;
+  }, null);
 
-  const [deleteState, deleteAction, deletePending] = useActionState(
-    async () => {
-      const result = await deleteMemberAction({ memberId });
-      if (result.ok) {
-        router.push('/members');
-      }
-      return result;
-    },
-    null,
-  );
+  const [deleteState, deleteAction, deletePending] = useActionState(async () => {
+    const result = await deleteMemberAction({ memberId });
+    if (result.ok) {
+      router.push('/members');
+    }
+    return result;
+  }, null);
 
   return (
     <>
@@ -83,7 +77,9 @@ export function MemberActions({ memberId, memberName }: { memberId: string; memb
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="rounded-lg bg-white p-6 shadow-lg dark:bg-[#27272A]">
-            <h2 className="mb-2 text-lg font-semibold text-[#EF4444]">{t('members.deleteConfirmTitle')}</h2>
+            <h2 className="mb-2 text-lg font-semibold text-[#EF4444]">
+              {t('members.deleteConfirmTitle')}
+            </h2>
             <p className="mb-4 text-sm text-[#6B7280] dark:text-[#A0A0A8]">
               {t('members.deleteConfirmBody', { name: memberName })}
             </p>
