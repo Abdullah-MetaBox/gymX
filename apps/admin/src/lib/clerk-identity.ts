@@ -19,9 +19,28 @@ import { cache } from 'react';
  * `withAnonymous` is the right context for this: `users` is not tenant-scoped,
  * and we have no gym (or even a user id) to open a scoped context with yet.
  */
+/**
+ * Process-local memo of clerk id -> GymX id.
+ *
+ * Safe to hold indefinitely because it caches an *identity*, never a
+ * permission. The mapping is immutable in practice — a Clerk account resolves
+ * to one GymX user for its lifetime — and everything that can change is still
+ * read from the database on every request: getPrincipal re-reads the user's
+ * status and their roles, so disabling an account or revoking a role takes
+ * effect on the next request exactly as before.
+ *
+ * Worth doing because without it every authenticated page load opens a third
+ * database transaction purely to answer a question whose answer never changes.
+ * Against a database in another region that was roughly 900 ms per request.
+ */
+const idCache = new Map<string, string>();
+
 export const resolveGymxUserId = cache(async (): Promise<string | null> => {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) return null;
+
+  const memo = idCache.get(clerkUserId);
+  if (memo) return memo;
 
   const existing = await withAnonymous(async (db) => {
     const [row] = await db
@@ -32,7 +51,13 @@ export const resolveGymxUserId = cache(async (): Promise<string | null> => {
     return row ?? null;
   });
 
-  if (existing) return existing.status === 'active' ? existing.id : null;
+  if (existing) {
+    // Only an active user is memoised. A disabled one is refused here and
+    // re-checked next request, so reinstating them needs no restart.
+    if (existing.status !== 'active') return null;
+    idCache.set(clerkUserId, existing.id);
+    return existing.id;
+  }
 
   // First sign-in for this Clerk account: link it to an existing GymX user by
   // email. currentUser() is an API call, so it only runs on this one request —
@@ -71,6 +96,8 @@ export const resolveGymxUserId = cache(async (): Promise<string | null> => {
       .set({ clerkUserId, lastLoginAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, match.id));
   });
+
+  idCache.set(clerkUserId, match.id);
 
   return match.id;
 });

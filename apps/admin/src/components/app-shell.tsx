@@ -64,6 +64,8 @@ export async function AppShell({
               href: entry.href,
               icon: entry.icon,
               label: t(`nav.${entry.labelKey}` as never),
+              comingSoon: entry.comingSoon,
+              comingSoonLabel: t('nav.comingSoon'),
             }))}
           />
         </nav>
@@ -110,6 +112,19 @@ export async function AppShell({
                   label={t('locale.label')}
                   submitLabel={t('common.confirm')}
                 />
+              </form>
+            ) : null}
+
+            {/* The Gyms entry leaves the sidebar once a gym is active, so this
+                is how Metabox staff get back to the cross-gym console. */}
+            {principal.isPlatformAdmin && actor.gymId ? (
+              <form action={leaveGymAction}>
+                <button
+                  type="submit"
+                  className="text-muted rounded-lg px-3 py-1.5 text-sm hover:surface-2"
+                >
+                  {t('gymSwitcher.platformView')}
+                </button>
               </form>
             ) : null}
 

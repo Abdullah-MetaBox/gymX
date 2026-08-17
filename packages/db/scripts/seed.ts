@@ -34,6 +34,17 @@ const GYM_ABC_USERS: SeedUser[] = [
   { email: 'accounts@gymabc.mu', name: 'Kevin Li Ying', role: 'accountant' },
 ];
 
+/**
+ * Metabox's own people, by the address they actually sign in with.
+ *
+ * Their Clerk identity is a Google account, so the email here has to match the
+ * Google address exactly — a near-miss (abdullah.m@ vs admin@) authenticates
+ * successfully and then resolves to nobody.
+ */
+const METABOX_STAFF: { email: string; name: string }[] = [
+  { email: 'abdullah.m@metabox.mu', name: 'Abdullah M' },
+];
+
 const NORTHSIDE_USERS: SeedUser[] = [
   { email: 'manager@northside.mu', name: 'Sandra Mootoo', role: 'gym_manager' },
   { email: 'desk@northside.mu', name: 'Jean-Paul Adam', role: 'staff' },
@@ -117,7 +128,11 @@ async function main() {
              )`,
     );
 
-    // --- Platform admin --------------------------------------------------
+    // --- Platform admins ---------------------------------------------------
+    // Real Metabox accounts belong here too, not just the generic fixture.
+    // Identity comes from Clerk, but a Clerk account grants nothing until it
+    // resolves to a row in `users` — so signing in with a Google address that
+    // has no row here is refused, which looks exactly like a broken login.
     const platformAdmin = await upsertUser(db, {
       email: 'admin@metabox.mu',
       name: 'Metabox Platform Admin',
@@ -128,6 +143,31 @@ async function main() {
       .values({ userId: platformAdmin.id })
       .onConflictDoNothing();
     console.log(`✓ platform admin: ${platformAdmin.email}`);
+
+    for (const staff of METABOX_STAFF) {
+      const user = await upsertUser(db, {
+        email: staff.email,
+        name: staff.name,
+        passwordHash,
+      });
+
+      // Deliberately NOT a platform admin. The Metabox console is not part of
+      // what Gym ABC is being shown, and holding both roles put a Gyms entry and
+      // a platform-view control in a gym manager's chrome. Grant it by adding a
+      // platformAdmins row for this user when the cross-gym console is needed.
+      await db
+        .delete(schema.platformAdmins)
+        .where(eq(schema.platformAdmins.userId, user.id));
+
+      await db
+        .insert(schema.userRoles)
+        .values({ userId: user.id, gymId: gymAbc.id, role: 'gym_manager' })
+        .onConflictDoUpdate({
+          target: [schema.userRoles.userId, schema.userRoles.gymId],
+          set: { role: 'gym_manager' },
+        });
+      console.log(`✓ gym_manager at Gym ABC: ${staff.email}`);
+    }
 
     // --- Gym users -------------------------------------------------------
     for (const [gymId, seedUsers] of [

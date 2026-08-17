@@ -24,6 +24,13 @@ export interface NavEntry {
   requires?: { action: Action; subject: Subject };
   /** Platform console entries, shown only to platform admins. */
   platformOnly?: boolean;
+  /**
+   * Listed, but not yet built. Rendered greyed out and NOT as a link, so it
+   * communicates scope without becoming a dead click — the sidebar can show
+   * where the product is going without teaching anyone that its links do
+   * nothing.
+   */
+  comingSoon?: boolean;
   order: number;
 }
 
@@ -50,6 +57,14 @@ const CORE_NAV: NavEntry[] = [
     order: 40,
   },
   {
+    id: 'guestPasses',
+    href: '/guest-passes',
+    labelKey: 'guestPasses',
+    icon: 'Ticket',
+    requires: { action: 'read', subject: 'guest_pass' },
+    order: 30,
+  },
+  {
     id: 'access',
     href: '/access',
     labelKey: 'checkIn',
@@ -57,24 +72,82 @@ const CORE_NAV: NavEntry[] = [
     requires: { action: 'read', subject: 'access_event' },
     order: 67,
   },
-];
 
-/**
- * Screens that exist but do not yet work, kept here so nobody has to re-derive
- * the list. Restore an entry the day its screen does something real — see the
- * file header: a sidebar full of dead links teaches staff to ignore the sidebar.
- *
- *   households    /households      restore if the merged Members screen ever splits
- *   guestPasses   /guest-passes    read: guest_pass
- *   subscriptions /subscriptions   restore when the list adds value over Members
- *   invoices      /invoices        read: invoice
- *   payments      /payments        read: payment
- *   tillShifts    /till-shifts     read: till_shift
- *   team          /team            read: user
- *   auditLog      /audit           read: audit_log
- *   settings      /settings        update: gym
- *   gyms          /platform/gyms   platformOnly
- */
+  // --- Coming soon ---------------------------------------------------------
+  // Shown so the sidebar states the shape of the product, but inert: no href is
+  // followed, so none of these is a dead click. Drop `comingSoon` the day the
+  // screen does something real.
+  {
+    id: 'invoices',
+    href: '/invoices',
+    labelKey: 'invoices',
+    icon: 'FileText',
+    requires: { action: 'read', subject: 'invoice' },
+    comingSoon: true,
+    order: 55,
+  },
+  {
+    id: 'payments',
+    href: '/payments',
+    labelKey: 'payments',
+    icon: 'Wallet',
+    requires: { action: 'read', subject: 'payment' },
+    order: 60,
+  },
+  {
+    id: 'tillShifts',
+    href: '/cash-drawer',
+    labelKey: 'tillShifts',
+    icon: 'ReceiptText',
+    requires: { action: 'read', subject: 'till_shift' },
+    order: 65,
+  },
+  {
+    id: 'reports',
+    href: '/reports',
+    labelKey: 'reports',
+    icon: 'ChartColumn',
+    requires: { action: 'read', subject: 'report' },
+    comingSoon: true,
+    order: 72,
+  },
+  {
+    id: 'team',
+    href: '/team',
+    labelKey: 'team',
+    icon: 'Users',
+    requires: { action: 'read', subject: 'user' },
+    comingSoon: true,
+    order: 75,
+  },
+  {
+    id: 'auditLog',
+    href: '/audit',
+    labelKey: 'auditLog',
+    icon: 'ScrollText',
+    requires: { action: 'read', subject: 'audit_log' },
+    comingSoon: true,
+    order: 85,
+  },
+  {
+    id: 'settings',
+    href: '/settings',
+    labelKey: 'settings',
+    icon: 'Settings',
+    requires: { action: 'update', subject: 'gym' },
+    comingSoon: true,
+    order: 95,
+  },
+  {
+    id: 'gyms',
+    href: '/platform/gyms',
+    labelKey: 'gyms',
+    icon: 'Building2',
+    platformOnly: true,
+    comingSoon: true,
+    order: 105,
+  },
+];
 
 export interface NavContext {
   role: Role;
@@ -87,7 +160,12 @@ export interface NavContext {
 
 export function navFor(context: NavContext): NavEntry[] {
   const core = CORE_NAV.filter((entry) => {
-    if (entry.platformOnly) return context.isPlatformAdmin;
+    // Platform entries belong to the cross-gym console, so they disappear once
+    // you are operating inside a gym — a manager of Gym ABC has no business
+    // seeing a list of every gym on the platform, and that stays true when the
+    // same person also happens to be Metabox staff. Leaving the gym brings them
+    // back.
+    if (entry.platformOnly) return context.isPlatformAdmin && !context.gymId;
     if (!entry.requires) return true;
     return can(context.role, entry.requires.action, entry.requires.subject);
   });
