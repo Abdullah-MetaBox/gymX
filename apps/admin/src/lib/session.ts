@@ -199,9 +199,28 @@ export const getActiveContext = cache(async (): Promise<ActiveContext | null> =>
   };
 });
 
+/**
+ * For server *actions*, where an uncaught throw becomes a typed failure the
+ * form can render. A page must not use this: there is nowhere to render the
+ * error to, so the throw surfaces as "Application error: a server-side
+ * exception has occurred" — which is what a signed-out visitor got on the
+ * dashboard. Pages use requirePageContext or requirePageAccess.
+ */
 export async function requireActiveContext(): Promise<ActiveContext> {
   const context = await getActiveContext();
   if (!context) throw new UnauthorizedError();
+  return context;
+}
+
+/**
+ * Page-level: resolve the actor, or send them to sign in.
+ *
+ * The permissionless sibling of requirePageAccess, for pages that everyone
+ * signed in may see — the dashboard being the obvious one.
+ */
+export async function requirePageContext(): Promise<ActiveContext> {
+  const context = await getActiveContext();
+  if (!context) redirect('/sign-in');
   return context;
 }
 

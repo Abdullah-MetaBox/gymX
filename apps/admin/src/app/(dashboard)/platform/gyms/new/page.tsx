@@ -4,11 +4,11 @@ import { getTranslations } from 'next-intl/server';
 import { GymForm } from '../../../../../components/gym-form';
 import { PageHeader } from '../../../../../components/ui/index';
 import { gymFormLabels } from '../../../../../lib/gym-form-labels';
-import { requireActiveContext } from '../../../../../lib/session';
+import { requirePageContext } from '../../../../../lib/session';
 import { createGym } from '../actions';
 
 export default async function NewGymPage() {
-  const context = await requireActiveContext();
+  const context = await requirePageContext();
   if (!context.principal.isPlatformAdmin) notFound();
 
   const t = await getTranslations();

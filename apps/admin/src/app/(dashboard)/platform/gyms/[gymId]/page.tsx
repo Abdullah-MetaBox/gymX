@@ -7,12 +7,12 @@ import { GymForm } from '../../../../../components/gym-form';
 import { PageHeader } from '../../../../../components/ui/index';
 import { queryOnPlatform } from '../../../../../lib/action';
 import { gymFormLabels } from '../../../../../lib/gym-form-labels';
-import { requireActiveContext } from '../../../../../lib/session';
+import { requirePageContext } from '../../../../../lib/session';
 import { updateGymOnPlatform } from '../actions';
 
 export default async function EditGymPage({ params }: { params: Promise<{ gymId: string }> }) {
   const { gymId } = await params;
-  const context = await requireActiveContext();
+  const context = await requirePageContext();
   if (!context.principal.isPlatformAdmin) notFound();
 
   const t = await getTranslations();

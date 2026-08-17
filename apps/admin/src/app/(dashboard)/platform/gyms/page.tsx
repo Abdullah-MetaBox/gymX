@@ -14,12 +14,12 @@ import {
   Th,
 } from '../../../../components/ui/index';
 import { queryOnPlatform } from '../../../../lib/action';
-import { requireActiveContext } from '../../../../lib/session';
+import { requirePageContext } from '../../../../lib/session';
 import { EnterGymButton } from './enter-gym-button';
 
 /** Every gym on the platform. Reachable only through the audited platform context. */
 export default async function PlatformGymsPage() {
-  const context = await requireActiveContext();
+  const context = await requirePageContext();
   if (!context.principal.isPlatformAdmin) notFound();
 
   const t = await getTranslations();

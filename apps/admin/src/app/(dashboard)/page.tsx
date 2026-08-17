@@ -1,11 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import { Badge, EmptyState, PageHeader } from '../../components/ui/index';
-import { requireActiveContext } from '../../lib/session';
+import { requirePageContext } from '../../lib/session';
 import { ManagerDashboard } from './dashboard-manager';
 
 export default async function DashboardPage() {
   const t = await getTranslations();
-  const context = await requireActiveContext();
+  const context = await requirePageContext();
   const { principal, membership, actor } = context;
 
   return (
