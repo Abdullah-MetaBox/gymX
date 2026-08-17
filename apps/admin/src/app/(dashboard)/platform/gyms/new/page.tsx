@@ -5,7 +5,7 @@ import { GymForm } from '../../../../../components/gym-form';
 import { PageHeader } from '../../../../../components/ui/index';
 import { gymFormLabels } from '../../../../../lib/gym-form-labels';
 import { requireActiveContext } from '../../../../../lib/session';
-import { createGymAction } from '../actions';
+import { createGym } from '../actions';
 
 export default async function NewGymPage() {
   const context = await requireActiveContext();
@@ -22,7 +22,7 @@ export default async function NewGymPage() {
         redirectTo="/platform/gyms"
         labels={labels}
         availableModules={allModules().map((module) => ({ id: module.id, name: module.name }))}
-        onSubmit={createGymAction}
+        onSubmit={createGym}
         values={{
           name: '',
           slug: '',

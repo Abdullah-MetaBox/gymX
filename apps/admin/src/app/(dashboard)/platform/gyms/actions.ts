@@ -82,7 +82,7 @@ function toRow(input: z.infer<typeof settingsSchema>) {
  * Create a gym. Platform scope: it writes to `gyms`, which no tenant context
  * can insert into — the RLS policy requires the platform flag.
  */
-export const createGymAction = defineAction(
+const createGymAction = defineAction(
   createSchema,
   {
     permission: { action: 'create', subject: 'gym' },
@@ -151,7 +151,7 @@ const updateAudit = {
  * Tenant scope: RLS confines the UPDATE to the active gym, so pointing this at
  * someone else's `gymId` does not fail a permission check — it matches no row.
  */
-export const updateGymAction = defineAction(
+const updateGymAction = defineAction(
   updateSchema,
   { permission: { action: 'update', subject: 'gym' }, audit: updateAudit },
   async (input, { db }) => applyGymUpdate(db, input),
@@ -165,7 +165,7 @@ export const updateGymAction = defineAction(
  * audit row still lands in the edited gym's trail — a gym owner should be able
  * to see that Metabox changed their VAT rate.
  */
-export const updateGymOnPlatformAction = defineAction(
+const updateGymOnPlatformAction = defineAction(
   updateSchema,
   {
     permission: { action: 'update', subject: 'gym' },
@@ -174,3 +174,23 @@ export const updateGymOnPlatformAction = defineAction(
   },
   async (input, { db }) => applyGymUpdate(db, input),
 );
+
+/**
+ * Client-callable wrappers.
+ *
+ * These are handed to GymForm, a client component, as its `action` prop. A
+ * 'use server' module only yields a usable client reference for a statically
+ * recognisable async function declaration — passing the const directly raises
+ * "Functions cannot be passed directly to Client Components".
+ */
+export async function createGym(input: unknown) {
+  return createGymAction(input);
+}
+
+export async function updateGym(input: unknown) {
+  return updateGymAction(input);
+}
+
+export async function updateGymOnPlatform(input: unknown) {
+  return updateGymOnPlatformAction(input);
+}

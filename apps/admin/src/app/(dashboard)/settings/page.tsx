@@ -8,7 +8,7 @@ import { EmptyState, PageHeader } from '../../../components/ui/index';
 import { queryInGym } from '../../../lib/action';
 import { gymFormLabels } from '../../../lib/gym-form-labels';
 import { requirePageAccess } from '../../../lib/session';
-import { updateGymAction } from '../platform/gyms/actions';
+import { updateGym } from '../platform/gyms/actions';
 
 /** A gym manager editing their own gym. */
 export default async function SettingsPage() {
@@ -42,7 +42,7 @@ export default async function SettingsPage() {
         mode="edit"
         labels={labels}
         availableModules={allModules().map((module) => ({ id: module.id, name: module.name }))}
-        onSubmit={updateGymAction}
+        onSubmit={updateGym}
         values={{
           gymId: gym.id,
           name: gym.name,

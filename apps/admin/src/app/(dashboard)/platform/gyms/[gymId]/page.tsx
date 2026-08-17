@@ -8,7 +8,7 @@ import { PageHeader } from '../../../../../components/ui/index';
 import { queryOnPlatform } from '../../../../../lib/action';
 import { gymFormLabels } from '../../../../../lib/gym-form-labels';
 import { requireActiveContext } from '../../../../../lib/session';
-import { updateGymOnPlatformAction } from '../actions';
+import { updateGymOnPlatform } from '../actions';
 
 export default async function EditGymPage({ params }: { params: Promise<{ gymId: string }> }) {
   const { gymId } = await params;
@@ -30,7 +30,7 @@ export default async function EditGymPage({ params }: { params: Promise<{ gymId:
         mode="edit"
         labels={labels}
         availableModules={allModules().map((module) => ({ id: module.id, name: module.name }))}
-        onSubmit={updateGymOnPlatformAction}
+        onSubmit={updateGymOnPlatform}
         values={{
           gymId: gym.id,
           name: gym.name,

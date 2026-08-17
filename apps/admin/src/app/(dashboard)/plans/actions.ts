@@ -83,7 +83,7 @@ function toRow(input: z.infer<typeof planSchema>) {
   };
 }
 
-export const createPlanAction = defineAction(
+const createPlanAction = defineAction(
   planSchema,
   {
     permission: { action: 'create', subject: 'plan' },
@@ -131,7 +131,7 @@ export const createPlanAction = defineAction(
 
 const updateSchema = planSchema.extend({ planId: z.string().uuid() });
 
-export const updatePlanAction = defineAction(
+const updatePlanAction = defineAction(
   updateSchema,
   {
     permission: { action: 'update', subject: 'plan' },

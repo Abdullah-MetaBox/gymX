@@ -1,7 +1,6 @@
 import { Money, Time } from '@gymx/core';
 import { auditLog, invoices, members, visits } from '@gymx/db';
 import { and, desc, eq, gte, isNull, lt, lte, ne, sql } from 'drizzle-orm';
-import { AlertTriangle, Banknote, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { type Activity, ActivityItem } from '../../components/activity-item';
@@ -118,21 +117,21 @@ export async function ManagerDashboard({ timeZone }: ManagerDashboardProps) {
           title={t('dashboard.activeMembers')}
           value={activeMembers}
           subtitle={t('dashboard.activeMembersHint')}
-          icon={<UserRound size={20} aria-hidden />}
+          icon="UserRound"
           accentColor="primary"
         />
         <KPICard
           title={t('dashboard.revenue')}
           value={Money.format(Money.cents(revenueCents), { currency: 'MUR' })}
           subtitle={t('dashboard.revenueHint')}
-          icon={<Banknote size={20} aria-hidden />}
+          icon="Banknote"
           accentColor="success"
         />
         <KPICard
           title={t('dashboard.overdue')}
           value={overdueCount}
           subtitle={t('dashboard.overdueHint')}
-          icon={<AlertTriangle size={20} aria-hidden />}
+          icon="TriangleAlert"
           accentColor="warning"
         />
         <div className="surface flex items-center justify-center rounded-[var(--radius-card)] border border-[var(--color-border)] p-6">

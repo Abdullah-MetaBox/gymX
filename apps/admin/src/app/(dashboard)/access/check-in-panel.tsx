@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Alert, Avatar, Button, Card, CardBody, Field, Select } from '../../../components/ui/index';
-import { checkInAction } from './check-in';
+import { checkIn } from './check-in';
 
 type Decision = {
   result: 'granted' | 'denied';
@@ -33,7 +33,7 @@ export function CheckInPanel({ members }: { members: { id: string; label: string
   function submit() {
     setError(null);
     startTransition(async () => {
-      const result = await checkInAction({ memberId, area, direction });
+      const result = await checkIn({ memberId, area, direction });
       if (!result.ok) {
         setError(result.error);
         setDecision(null);

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { addHouseholdMemberAction } from '../app/(dashboard)/households/actions';
+import { addHouseholdMember } from '../app/(dashboard)/households/actions';
 import { Alert, Button, Field, Select } from './ui/index';
 
 interface Member {
@@ -31,7 +31,7 @@ export function AddHouseholdMemberForm({
         if (typeof value === 'string') data[key] = value;
       }
       data.householdId = householdId;
-      return addHouseholdMemberAction(data);
+      return addHouseholdMember(data);
     },
     null,
   );

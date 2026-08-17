@@ -13,7 +13,7 @@ const createSchema = z.object({
   validOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-export const createGuestPassAction = defineAction(
+const createGuestPassAction = defineAction(
   createSchema,
   {
     permission: { action: 'create', subject: 'guest_pass' },
@@ -38,3 +38,8 @@ export const createGuestPassAction = defineAction(
     return { id: pass.id };
   },
 );
+
+/** Client-callable wrapper — see the note in members/actions.ts. */
+export async function createGuestPass(input: unknown) {
+  return createGuestPassAction(input);
+}

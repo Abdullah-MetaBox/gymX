@@ -38,7 +38,7 @@ const checkInSchema = z.object({
  * logs successes cannot answer "who got in while overdue?", which is the exact
  * question this product exists to answer.
  */
-export const checkInAction = defineAction(
+const checkInAction = defineAction(
   checkInSchema,
   {
     permission: { action: 'create', subject: 'access_event' },
@@ -208,3 +208,8 @@ export const checkInAction = defineAction(
     };
   },
 );
+
+/** Client-callable wrapper — see the note in members/actions.ts. */
+export async function checkIn(input: unknown) {
+  return checkInAction(input);
+}

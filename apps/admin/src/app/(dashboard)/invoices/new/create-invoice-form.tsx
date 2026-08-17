@@ -13,7 +13,7 @@ import {
   Field,
   Input,
 } from '../../../../components/ui/index';
-import { createInvoiceAction } from '../../subscriptions/actions';
+import { createInvoice } from '../../subscriptions/actions';
 
 interface CreateInvoiceFormProps {
   formId: string;
@@ -36,7 +36,7 @@ export function CreateInvoiceForm({
 
   const [state, formAction, pending] = useActionState(
     async (_prev: unknown, formData: FormData) => {
-      const result = await createInvoiceAction({
+      const result = await createInvoice({
         subscriptionId,
         periodStart: formData.get('periodStart') as string,
         periodEnd: formData.get('periodEnd') as string,

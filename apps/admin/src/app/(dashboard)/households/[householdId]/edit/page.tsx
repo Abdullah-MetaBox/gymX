@@ -6,7 +6,6 @@ import { getTranslations } from 'next-intl/server';
 import { Button, PageHeader } from '../../../../../components/ui/index';
 import { queryInGym } from '../../../../../lib/action';
 import { requirePageAccess } from '../../../../../lib/session';
-import { updateHouseholdAction } from '../../actions';
 import { HouseholdForm } from '../edit-form';
 
 export default async function EditHouseholdPage({

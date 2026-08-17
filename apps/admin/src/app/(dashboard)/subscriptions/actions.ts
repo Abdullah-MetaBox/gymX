@@ -50,7 +50,7 @@ function toSubscriptionRow(
   };
 }
 
-export const createSubscriptionAction = defineAction(
+const createSubscriptionAction = defineAction(
   createSubscriptionSchema,
   {
     permission: { action: 'create', subject: 'subscription' },
@@ -98,7 +98,7 @@ const assignPlanSchema = z
     path: ['scope'],
   });
 
-export const assignPlanAction = defineAction(
+const assignPlanAction = defineAction(
   assignPlanSchema,
   {
     permission: { action: 'create', subject: 'subscription' },
@@ -217,7 +217,7 @@ const cancelSubscriptionSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export const cancelSubscriptionAction = defineAction(
+const cancelSubscriptionAction = defineAction(
   cancelSubscriptionSchema,
   {
     permission: { action: 'update', subject: 'subscription' },
@@ -256,7 +256,7 @@ const createInvoiceSchema = z.object({
   dueOn: z.string().date(),
 });
 
-export const createInvoiceAction = defineAction(
+const createInvoiceAction = defineAction(
   createInvoiceSchema,
   {
     permission: { action: 'create', subject: 'invoice' },
@@ -351,7 +351,7 @@ const updateSubscriptionSchema = z.object({
   endsOn: z.string().date().optional().or(z.literal('')),
 });
 
-export const updateSubscriptionAction = defineAction(
+const updateSubscriptionAction = defineAction(
   updateSubscriptionSchema,
   {
     permission: { action: 'update', subject: 'subscription' },
@@ -389,7 +389,7 @@ const holdSubscriptionSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export const holdSubscriptionAction = defineAction(
+const holdSubscriptionAction = defineAction(
   holdSubscriptionSchema,
   {
     permission: { action: 'update', subject: 'subscription' },
@@ -427,7 +427,7 @@ export const holdSubscriptionAction = defineAction(
 // Resume a subscription
 const resumeSubscriptionSchema = z.object({ subscriptionId: z.string().uuid() });
 
-export const resumeSubscriptionAction = defineAction(
+const resumeSubscriptionAction = defineAction(
   resumeSubscriptionSchema,
   {
     permission: { action: 'update', subject: 'subscription' },
@@ -456,7 +456,7 @@ export const resumeSubscriptionAction = defineAction(
 // Delete a subscription (only if no invoices exist)
 const deleteSubscriptionSchema = z.object({ subscriptionId: z.string().uuid() });
 
-export const deleteSubscriptionAction = defineAction(
+const deleteSubscriptionAction = defineAction(
   deleteSubscriptionSchema,
   {
     permission: { action: 'delete', subject: 'subscription' },
@@ -488,3 +488,16 @@ export const deleteSubscriptionAction = defineAction(
     return { id: input.subscriptionId };
   },
 );
+
+/** Client-callable wrappers — see the note in members/actions.ts. */
+export async function assignPlan(input: unknown) {
+  return assignPlanAction(input);
+}
+
+export async function cancelSubscription(input: unknown) {
+  return cancelSubscriptionAction(input);
+}
+
+export async function createInvoice(input: unknown) {
+  return createInvoiceAction(input);
+}

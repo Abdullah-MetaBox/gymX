@@ -35,7 +35,7 @@ const recordAccessEventSchema = z.object({
   overrideReason: z.string().max(500).optional(),
 });
 
-export const recordAccessEventAction = defineAction(
+const recordAccessEventAction = defineAction(
   recordAccessEventSchema,
   {
     permission: { action: 'create', subject: 'access_event' },
@@ -75,7 +75,7 @@ const closeVisitSchema = z.object({
   visitId: z.string().uuid(),
 });
 
-export const closeVisitAction = defineAction(
+const closeVisitAction = defineAction(
   closeVisitSchema,
   {
     permission: { action: 'update', subject: 'visit' },

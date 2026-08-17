@@ -13,7 +13,7 @@ import {
   Input,
   Select,
 } from '../../../components/ui/index';
-import { createGuestPassAction } from './actions';
+import { createGuestPass } from './actions';
 
 const today = () => new Date().toISOString().split('T')[0];
 
@@ -29,7 +29,7 @@ export function GuestPassForm({
       for (const [key, value] of formData.entries()) {
         if (typeof value === 'string') data[key] = value;
       }
-      return createGuestPassAction(data);
+      return createGuestPass(data);
     },
     null,
   );

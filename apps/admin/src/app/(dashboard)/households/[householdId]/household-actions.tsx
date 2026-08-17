@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Button } from '../../../../components/ui/index';
 import { ConfirmDialog } from '../../../../components/ui/modal';
-import { deleteHouseholdAction } from '../actions';
+import { deleteHousehold } from '../actions';
 
 export function HouseholdActions({
   householdId,
@@ -34,7 +34,7 @@ export function HouseholdActions({
         }}
         onConfirm={() =>
           startTransition(async () => {
-            const result = await deleteHouseholdAction({ householdId });
+            const result = await deleteHousehold({ householdId });
             if (!result.ok) {
               setError(result.error);
               return;

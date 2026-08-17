@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Button } from '../../../../components/ui/index';
 import { ConfirmDialog } from '../../../../components/ui/modal';
-import { archiveMemberAction, deleteMemberAction } from '../actions';
+import { archiveMember, deleteMember } from '../actions';
 
 type Dialog = 'archive' | 'delete' | null;
 
@@ -59,7 +59,7 @@ export function MemberActions({
       <ConfirmDialog
         open={dialog === 'archive'}
         onClose={close}
-        onConfirm={() => run(() => archiveMemberAction({ memberId }))}
+        onConfirm={() => run(() => archiveMember({ memberId }))}
         title={t('members.archiveConfirmTitle')}
         body={t('members.archiveConfirmBody', { name: memberName })}
         confirmLabel={t('members.archive')}
@@ -72,7 +72,7 @@ export function MemberActions({
       <ConfirmDialog
         open={dialog === 'delete'}
         onClose={close}
-        onConfirm={() => run(() => deleteMemberAction({ memberId }))}
+        onConfirm={() => run(() => deleteMember({ memberId }))}
         title={t('members.deleteConfirmTitle')}
         body={t('members.deleteConfirmBody', { name: memberName })}
         confirmLabel={t('common.delete')}

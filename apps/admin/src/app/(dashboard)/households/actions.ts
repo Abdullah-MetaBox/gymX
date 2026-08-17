@@ -13,7 +13,7 @@ const createSchema = z.object({
   payerMemberId: z.string().uuid().optional().or(z.literal('')),
 });
 
-export const createHouseholdAction = defineAction(
+const createHouseholdAction = defineAction(
   createSchema,
   {
     permission: { action: 'create', subject: 'household' },
@@ -42,7 +42,7 @@ const addMemberSchema = z.object({
   relationship: z.enum(['primary', 'spouse', 'child', 'other']).default('other'),
 });
 
-export const addHouseholdMemberAction = defineAction(
+const addHouseholdMemberAction = defineAction(
   addMemberSchema,
   {
     permission: { action: 'update', subject: 'household' },
@@ -72,7 +72,7 @@ const updatePayerSchema = z.object({
   payerMemberId: z.string().uuid().optional().or(z.literal('')),
 });
 
-export const updateHouseholdPayerAction = defineAction(
+const updateHouseholdPayerAction = defineAction(
   updatePayerSchema,
   {
     permission: { action: 'update', subject: 'household' },
@@ -106,7 +106,7 @@ const updateSchema = z.object({
   payerMemberId: z.string().uuid().optional().or(z.literal('')),
 });
 
-export const updateHouseholdAction = defineAction(
+const updateHouseholdAction = defineAction(
   updateSchema,
   {
     permission: { action: 'update', subject: 'household' },
@@ -133,7 +133,7 @@ export const updateHouseholdAction = defineAction(
 
 const deleteSchema = z.object({ householdId: z.string().uuid() });
 
-export const deleteHouseholdAction = defineAction(
+const deleteHouseholdAction = defineAction(
   deleteSchema,
   {
     permission: { action: 'delete', subject: 'household' },
@@ -148,3 +148,16 @@ export const deleteHouseholdAction = defineAction(
     return { id: input.householdId };
   },
 );
+
+/** Client-callable wrappers — see the note in members/actions.ts. */
+export async function updateHousehold(input: unknown) {
+  return updateHouseholdAction(input);
+}
+
+export async function deleteHousehold(input: unknown) {
+  return deleteHouseholdAction(input);
+}
+
+export async function addHouseholdMember(input: unknown) {
+  return addHouseholdMemberAction(input);
+}

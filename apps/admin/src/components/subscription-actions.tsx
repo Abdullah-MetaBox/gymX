@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
-import { cancelSubscriptionAction } from '../app/(dashboard)/subscriptions/actions';
+import { cancelSubscription } from '../app/(dashboard)/subscriptions/actions';
 import { Button } from './ui/index';
 import { ConfirmDialog } from './ui/modal';
 
@@ -52,7 +52,7 @@ export function SubscriptionActions({
         }}
         onConfirm={() =>
           startTransition(async () => {
-            const result = await cancelSubscriptionAction({ subscriptionId });
+            const result = await cancelSubscription({ subscriptionId });
             if (!result.ok) {
               setError(result.error);
               return;

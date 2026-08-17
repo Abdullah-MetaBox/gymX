@@ -7,24 +7,7 @@ import { revalidatePath } from 'next/cache';
 import Papa from 'papaparse';
 import { z } from 'zod';
 import { defineAction } from '../../../../lib/action';
-
-/** CSV field names the import recognises. */
-export const IMPORT_FIELDS = [
-  'firstName',
-  'lastName',
-  'email',
-  'phone',
-  'dateOfBirth',
-  'nic',
-  'address',
-  'gender',
-  'joinedAt',
-  'medicalNote',
-  'emergencyContactName',
-  'emergencyContactPhone',
-] as const;
-
-export type ImportField = (typeof IMPORT_FIELDS)[number];
+import type { ImportField } from '../../../../lib/member-import/fields';
 
 export interface ImportRowResult {
   rowNo: number;
@@ -40,7 +23,7 @@ const importSchema = z.object({
   dryRun: z.coerce.boolean().default(true),
 });
 
-export const importMembersAction = defineAction(
+const importMembersAction = defineAction(
   importSchema,
   {
     permission: { action: 'create', subject: 'import_job' },
@@ -203,3 +186,8 @@ export const importMembersAction = defineAction(
     return { results, okCount, errorCount, duplicateCount, dryRun: input.dryRun };
   },
 );
+
+/** Client-callable wrapper — see the note in members/actions.ts. */
+export async function importMembers(input: unknown) {
+  return importMembersAction(input);
+}

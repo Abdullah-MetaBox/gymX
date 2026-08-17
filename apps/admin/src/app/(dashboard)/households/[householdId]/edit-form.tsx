@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { Alert, Button, Field, Input, Select } from '../../../../components/ui/index';
-import { updateHouseholdAction } from '../actions';
+import { updateHousehold } from '../actions';
 
 const formatMemberCode = (seq: number) => `M${String(seq).padStart(5, '0')}`;
 
@@ -25,7 +25,7 @@ export function HouseholdForm({
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     async (_prev: unknown, formData: FormData) => {
-      const result = await updateHouseholdAction({
+      const result = await updateHousehold({
         householdId,
         name: formData.get('name') as string,
         payerMemberId: formData.get('payerMemberId') as string | undefined,

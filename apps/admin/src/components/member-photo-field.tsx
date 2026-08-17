@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
-import { deleteMemberPhotoAction, setMemberPhotoAction } from '../app/(dashboard)/members/actions';
+import { deleteMemberPhoto, setMemberPhoto } from '../app/(dashboard)/members/actions';
 import { IMAGE_ACCEPT } from '../lib/image-upload';
 import { Alert, Avatar, Button } from './ui/index';
 
@@ -40,7 +40,7 @@ export function MemberPhotoField({
       return;
     }
 
-    const saved = await setMemberPhotoAction({
+    const saved = await setMemberPhoto({
       memberId,
       photoKey: payload.key,
       photoUrl: payload.url,
@@ -92,7 +92,7 @@ export function MemberPhotoField({
                 disabled={pending}
                 onClick={() =>
                   startTransition(async () => {
-                    const result = await deleteMemberPhotoAction({ memberId });
+                    const result = await deleteMemberPhoto({ memberId });
                     if (!result.ok) {
                       setError(result.error);
                       return;

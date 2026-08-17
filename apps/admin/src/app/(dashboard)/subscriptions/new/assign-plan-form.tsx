@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { Alert, Button, Field, Input, Select } from '../../../../components/ui/index';
-import { assignPlanAction } from '../actions';
+import { assignPlan } from '../actions';
 
 interface PlanOption {
   id: string;
@@ -53,7 +53,7 @@ export function AssignPlanForm({
   function submit() {
     setError(null);
     startTransition(async () => {
-      const result = await assignPlanAction({
+      const result = await assignPlan({
         planId,
         scope,
         memberId: scope === 'member' ? memberId : undefined,

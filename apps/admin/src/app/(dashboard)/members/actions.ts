@@ -53,7 +53,7 @@ function toRow(input: z.infer<typeof memberSchema>) {
   };
 }
 
-export const createMemberAction = defineAction(
+const createMemberAction = defineAction(
   memberSchema,
   {
     permission: { action: 'create', subject: 'member' },
@@ -112,7 +112,7 @@ export const createMemberAction = defineAction(
 
 const updateSchema = memberSchema.extend({ memberId: z.string().uuid() });
 
-export const updateMemberAction = defineAction(
+const updateMemberAction = defineAction(
   updateSchema,
   {
     permission: { action: 'update', subject: 'member' },
@@ -156,7 +156,7 @@ export async function updateMemberAndRedirect(input: unknown) {
 
 const deleteSchema = z.object({ memberId: z.string().uuid() });
 
-export const deleteMemberAction = defineAction(
+const deleteMemberAction = defineAction(
   deleteSchema,
   {
     permission: { action: 'delete', subject: 'member' },
@@ -194,7 +194,7 @@ const setPhotoSchema = z.object({
   photoUrl: z.string().url().max(1024),
 });
 
-export const setMemberPhotoAction = defineAction(
+const setMemberPhotoAction = defineAction(
   setPhotoSchema,
   {
     permission: { action: 'update', subject: 'member' },
@@ -230,7 +230,7 @@ export const setMemberPhotoAction = defineAction(
   },
 );
 
-export const deleteMemberPhotoAction = defineAction(
+const deleteMemberPhotoAction = defineAction(
   z.object({ memberId: z.string().uuid() }),
   {
     permission: { action: 'update', subject: 'member' },
@@ -278,7 +278,7 @@ function isBlobUrl(value: string): boolean {
 
 const archiveSchema = z.object({ memberId: z.string().uuid() });
 
-export const archiveMemberAction = defineAction(
+const archiveMemberAction = defineAction(
   archiveSchema,
   {
     permission: { action: 'update', subject: 'member' },
@@ -298,3 +298,31 @@ export const archiveMemberAction = defineAction(
     return { id: member.id };
   },
 );
+
+/**
+ * Client-callable wrappers.
+ *
+ * A 'use server' module only yields a usable client reference for a statically
+ * recognisable async function declaration. `export const x = defineAction(...)`
+ * is a const whose value happens to be a function, which Next cannot see
+ * through — importing one into a client component sends the module itself and
+ * fails with "Only plain objects can be passed to Client Components".
+ *
+ * The actions above stay as they are for server-side callers; these are what
+ * client components import.
+ */
+export async function archiveMember(input: unknown) {
+  return archiveMemberAction(input);
+}
+
+export async function deleteMember(input: unknown) {
+  return deleteMemberAction(input);
+}
+
+export async function setMemberPhoto(input: unknown) {
+  return setMemberPhotoAction(input);
+}
+
+export async function deleteMemberPhoto(input: unknown) {
+  return deleteMemberPhotoAction(input);
+}
