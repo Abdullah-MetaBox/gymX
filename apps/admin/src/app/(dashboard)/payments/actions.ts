@@ -1,6 +1,7 @@
 'use server';
 
-import { NotFoundError } from '@gymx/core/errors';
+import { Money } from '@gymx/core';
+import { ConflictError, NotFoundError } from '@gymx/core/errors';
 import {
   creditNotes,
   paymentAllocations,
@@ -23,7 +24,7 @@ const createTillSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
-export const createTillAction = defineAction(
+const createTillAction = defineAction(
   createTillSchema,
   {
     permission: { action: 'create', subject: 'till' },
@@ -36,7 +37,7 @@ export const createTillAction = defineAction(
 
     if (!till) throw new NotFoundError('Could not create till');
 
-    revalidatePath('/till-shifts');
+    revalidatePath('/cash-drawer');
     return { id: till.id };
   },
 );
@@ -50,7 +51,7 @@ const openTillShiftSchema = z.object({
   openingFloatMajor: z.coerce.number().min(0).default(0),
 });
 
-export const openTillShiftAction = defineAction(
+const openTillShiftAction = defineAction(
   openTillShiftSchema,
   {
     permission: { action: 'create', subject: 'till_shift' },
@@ -58,7 +59,7 @@ export const openTillShiftAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const openingFloatCents = Math.round(input.openingFloatMajor * 100);
+    const openingFloatCents = Money.fromMajor(input.openingFloatMajor);
 
     const [shift] = await db
       .insert(tillShifts)
@@ -74,7 +75,7 @@ export const openTillShiftAction = defineAction(
 
     if (!shift) throw new NotFoundError('Could not open till shift');
 
-    revalidatePath('/till-shifts');
+    revalidatePath('/cash-drawer');
     return { id: shift.id };
   },
 );
@@ -85,7 +86,7 @@ const closeTillShiftSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-export const closeTillShiftAction = defineAction(
+const closeTillShiftAction = defineAction(
   closeTillShiftSchema,
   {
     permission: { action: 'update', subject: 'till_shift' },
@@ -97,7 +98,7 @@ export const closeTillShiftAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const countedCents = Math.round(input.countedMajor * 100);
+    const countedCents = Money.fromMajor(input.countedMajor);
 
     // Fetch the shift
     const [shift] = await db
@@ -143,12 +144,12 @@ export const closeTillShiftAction = defineAction(
 
     if (!closed) throw new NotFoundError('Could not close till shift');
 
-    revalidatePath('/till-shifts');
-    revalidatePath(`/till-shifts/${input.tillShiftId}`);
+    revalidatePath('/cash-drawer');
+    revalidatePath(`/cash-drawer/${input.tillShiftId}`);
     return {
       id: closed.id,
       varianceCents,
-      varianceMajor: varianceCents / 100,
+      varianceMajor: Money.toMajor(Money.cents(varianceCents)),
     };
   },
 );
@@ -166,7 +167,7 @@ const createPaymentSchema = z.object({
   receivedOn: z.string().date(),
 });
 
-export const createPaymentAction = defineAction(
+const createPaymentAction = defineAction(
   createPaymentSchema,
   {
     permission: { action: 'create', subject: 'payment' },
@@ -174,7 +175,36 @@ export const createPaymentAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const amountCents = Math.round(input.amountMajor * 100);
+
+    /**
+     * Cash cannot exist outside an open till shift.
+     *
+     * This is the invariant the product is built around. A VAT period at the
+     * client's gym showed 200 payments in the gateway, 400 in the system and
+     * 600 actually taken — the missing 200 was cash that entered the building
+     * and never entered a system, because nothing forced it to. Making the
+     * shift optional here re-opens exactly that hole, so cash without one is
+     * refused rather than silently recorded with a null shift.
+     *
+     * Non-cash methods leave their own trail (a card terminal, a bank line, a
+     * cheque), so they are allowed without a drawer.
+     */
+    if (input.method === 'cash') {
+      if (!input.tillShiftId) {
+        throw new ConflictError('Open a till shift before recording a cash payment.');
+      }
+
+      const [shift] = await db
+        .select({ id: tillShifts.id, status: tillShifts.status })
+        .from(tillShifts)
+        .where(and(eq(tillShifts.id, input.tillShiftId), eq(tillShifts.gymId, gymId)))
+        .limit(1);
+
+      if (!shift) throw new NotFoundError('That till shift does not exist.');
+      if (shift.status !== 'open') {
+        throw new ConflictError('That till shift is closed. Open a new one to take cash.');
+      }
+    }
 
     const [payment] = await db
       .insert(payments)
@@ -182,7 +212,7 @@ export const createPaymentAction = defineAction(
         gymId,
         payerMemberId: input.payerMemberId,
         method: input.method,
-        amountCents,
+        amountCents: Money.fromMajor(input.amountMajor),
         receivedAt: input.receivedOn,
         reference: input.reference || null,
         tillShiftId: input.tillShiftId || null,
@@ -193,6 +223,7 @@ export const createPaymentAction = defineAction(
     if (!payment) throw new NotFoundError('Could not create payment');
 
     revalidatePath('/payments');
+    revalidatePath('/cash-drawer');
     return { id: payment.id };
   },
 );
@@ -207,7 +238,7 @@ const allocatePaymentSchema = z.object({
   amountMajor: z.coerce.number().min(0.01),
 });
 
-export const allocatePaymentAction = defineAction(
+const allocatePaymentAction = defineAction(
   allocatePaymentSchema,
   {
     permission: { action: 'create', subject: 'payment_allocation' },
@@ -215,7 +246,7 @@ export const allocatePaymentAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const amountCents = Math.round(input.amountMajor * 100);
+    const amountCents = Money.fromMajor(input.amountMajor);
 
     // Verify payment exists and is from the right gym
     const [payment] = await db
@@ -258,7 +289,7 @@ const createCreditNoteSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
-export const createCreditNoteAction = defineAction(
+const createCreditNoteAction = defineAction(
   createCreditNoteSchema,
   {
     permission: { action: 'create', subject: 'credit_note' },
@@ -266,7 +297,7 @@ export const createCreditNoteAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const amountCents = Math.round(input.amountMajor * 100);
+    const amountCents = Money.fromMajor(input.amountMajor);
 
     const [creditNote] = await db
       .insert(creditNotes)
@@ -296,7 +327,7 @@ const createWriteOffSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
-export const createWriteOffAction = defineAction(
+const createWriteOffAction = defineAction(
   createWriteOffSchema,
   {
     permission: { action: 'create', subject: 'write_off' },
@@ -304,7 +335,7 @@ export const createWriteOffAction = defineAction(
   },
   async (input, { db, actor }) => {
     const gymId = actor.gymId!;
-    const amountCents = Math.round(input.amountMajor * 100);
+    const amountCents = Money.fromMajor(input.amountMajor);
 
     const [writeOff] = await db
       .insert(writeOffs)
@@ -323,3 +354,24 @@ export const createWriteOffAction = defineAction(
     return { id: writeOff.id };
   },
 );
+
+/** Client-callable wrappers — see the note in members/actions.ts. */
+export async function createTill(input: unknown) {
+  return createTillAction(input);
+}
+
+export async function openTillShift(input: unknown) {
+  return openTillShiftAction(input);
+}
+
+export async function closeTillShift(input: unknown) {
+  return closeTillShiftAction(input);
+}
+
+export async function createPayment(input: unknown) {
+  return createPaymentAction(input);
+}
+
+export async function allocatePayment(input: unknown) {
+  return allocatePaymentAction(input);
+}
