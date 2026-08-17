@@ -22,5 +22,9 @@ Thumbs.db
 .turbo/
 *.tsbuildinfo
 
-# Uploaded files in local dev
-storage/
+# Uploaded files in local dev.
+# Anchored to the repo root: an unanchored `storage/` also matches
+# packages/storage, which silently kept that whole workspace package out of git.
+# Every Vercel build failed with "Cannot resolve '@gymx/storage'" while local
+# builds passed, because the package existed on disk but was never committed.
+/storage/
