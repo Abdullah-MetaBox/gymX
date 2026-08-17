@@ -28,3 +28,10 @@ Thumbs.db
 # Every Vercel build failed with "Cannot resolve '@gymx/storage'" while local
 # builds passed, because the package existed on disk but was never committed.
 /storage/
+
+.vercel
+.env*
+# .env.example documents every variable the app needs and must stay in git.
+# It survives today only because it was committed before `vercel link` widened
+# the pattern above; the negation makes that explicit rather than incidental.
+!.env.example
