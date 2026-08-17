@@ -35,7 +35,9 @@
     "signingIn": "Signing in…",
     "point_members": "Members, family memberships and plans on one screen.",
     "point_access": "Check-in that confirms identity and entitlement at the door.",
-    "point_money": "Every payment reconciled — invoiced, received, outstanding."
+    "point_money": "Every payment reconciled — invoiced, received, outstanding.",
+    "noSignUpTitle": "Accounts are created by your gym",
+    "noSignUpBody": "GymX does not offer self-service registration. Ask your gym manager to add you, then sign in with the email address they used."
   },
   "nav": {
     "dashboard": "Dashboard",

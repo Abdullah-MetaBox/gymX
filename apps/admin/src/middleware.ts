@@ -27,5 +27,9 @@ export const config = {
   matcher: [
     // Everything except Next internals and static assets.
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Clerk's auto-proxy path. The catch-all above already admits it, but
+    // stating it means tightening that pattern later cannot silently cut Clerk
+    // off from its own endpoints.
+    '/__clerk/:path*',
   ],
 };

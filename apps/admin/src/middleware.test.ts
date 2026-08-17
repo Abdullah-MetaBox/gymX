@@ -20,8 +20,11 @@ describe('middleware matcher', () => {
   // matched — which is exactly what the first version of this test did.
   const matches = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
 
-  it('is a single pattern', () => {
-    expect(config.matcher).toHaveLength(1);
+  it("keeps Clerk's auto-proxy path matched", () => {
+    expect(config.matcher).toContain('/__clerk/:path*');
+    // Also admitted by the catch-all, so Clerk works even if the explicit entry
+    // is ever dropped.
+    expect(matches('/__clerk/handshake')).toBe(true);
   });
 
   it.each([
