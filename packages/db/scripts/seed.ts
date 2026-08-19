@@ -43,6 +43,7 @@ const GYM_ABC_USERS: SeedUser[] = [
  */
 const METABOX_STAFF: { email: string; name: string }[] = [
   { email: 'abdullah.m@metabox.mu', name: 'Abdullah M' },
+  { email: 'ishaaq@metabox.mu', name: 'Ishaaq' },
 ];
 
 const NORTHSIDE_USERS: SeedUser[] = [
